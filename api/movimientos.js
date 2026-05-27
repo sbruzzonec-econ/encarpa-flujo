@@ -60,9 +60,9 @@ module.exports = async (req, res) => {
           'Fecha del movimiento',
           'Monto neto',
           'Flujo',
-          'Nombre concepto',   // ← new lookup field added by Luca
-          'Descripción',       // ← human-readable description
-          'Personal vinculado',
+          'Nombre concepto',
+          'Descripción',
+          'Nombre personal vinculado',
         ],
         view: 'Todos los movimientos',
       })
@@ -74,19 +74,15 @@ module.exports = async (req, res) => {
     for (const r of records) {
       const f = r.fields;
       const monto  = Math.abs(parseFloat(f['Monto neto']) || 0);
-      const concepto = fv(f['Nombre concepto']); // concept category name
+      const concepto   = fv(f['Nombre concepto']);
       const descripcion = (f['Descripción'] || '').toString().trim();
-      const personal = Array.isArray(f['Personal vinculado'])
-        ? f['Personal vinculado'].join(', ')
-        : (f['Personal vinculado'] || '');
-      const fecha  = nd(f['Fecha del movimiento']);
-      const flujo  = fv(f['Flujo']);
+      const personal   = fv(f['Nombre personal vinculado']); // real name from lookup
+      const fecha      = nd(f['Fecha del movimiento']);
+      const flujo      = fv(f['Flujo']);
 
-      // Display description: prefer Descripción; if personal is a real name (not ID), append it
-      const isRecordId = personal.startsWith('rec') && personal.length > 10 && !personal.includes(' ');
-      const personalDisplay = isRecordId ? '' : personal;
+      // Display: Descripción if available, else concept + person name
       const desc = descripcion
-        || (personalDisplay ? `${concepto} — ${personalDisplay}` : concepto);
+        || (personal ? `${concepto} — ${personal}` : concepto);
 
       if (flujo === 'Ingreso') {
         ingresos.push({ id: r.id, desc, amount: monto, fecha, concepto, source: 'airtable' });
