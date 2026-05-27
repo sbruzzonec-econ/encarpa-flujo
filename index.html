@@ -771,10 +771,11 @@ function cForWeek(k){
 // ==================== CALCULATIONS ====================
 function getW(k){return S.weeks[k]||{};}
 function prevFinal(k){const pk=shiftKey(k,-1);const pw=S.weeks[pk];return pw&&pw._fin!==undefined?pw._fin:null;}
+function prevFinalProy(k){const pk=shiftKey(k,-1);const pw=S.weeks[pk];return pw&&pw._finProy!==undefined?pw._finProy:null;}
 
-function calcW(k, _override){
+function calcW(k, _override, _useProjOpening){
   const w=_override||getW(k);
-  const pf=prevFinal(k);
+  const pf=_useProjOpening ? prevFinalProy(k) : prevFinal(k);
   const opening=(w.openManual!==null&&w.openManual!==undefined&&w.openManual!=='')
     ?parseFloat(w.openManual)||0:(pf!==null?pf:0);
   const cs=cForWeek(k);
@@ -825,12 +826,13 @@ function render(){
     ppmReal: (_wOrig.ppmReal||0)+_at.ppmItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
   };
   // Pass merged directly to calcW - S.weeks is never touched
-  const c=calcW(k, w);
   const todayKey=monKey(new Date());
   const isFuture=k>todayKey;
+  const c=calcW(k, w, isFuture);
   document.getElementById('flow-card').classList.toggle('future-week',isFuture);
   if(!S.weeks[k])S.weeks[k]={};
   S.weeks[k]._fin=c.saldoFinal;
+  S.weeks[k]._finProy=c.projClosing;
   save();
 
   const _wd=new Date(k+'T12:00:00'),_ws=new Date(k+'T12:00:00');_ws.setDate(_ws.getDate()+6);
@@ -840,16 +842,17 @@ function render(){
   document.getElementById('wk-ivabadge').innerHTML=ivab?'<span class="badge ba">IVA y PPM — esta semana</span>':'';
   document.getElementById('iva-wbadge').innerHTML=ivab?'<span class="badge ba" style="font-size:10px">Esta semana</span>':'';
 
-  // Opening
+  // Opening: future→projected prev closing; current/past→real prev closing
   const fo=document.getElementById('f-open');
   const rawOpen=(w.openManual!=null&&w.openManual!=='')? w.openManual:'';
   fo.dataset.raw=rawOpen;
+  const pf=isFuture ? prevFinalProy(k) : prevFinal(k);
   if(document.activeElement!==fo){
-    fo.value=rawOpen!==''?clp(+rawOpen):'';
+    fo.value=rawOpen!==''?clp(+rawOpen):(pf!==null?clp(pf):'');
   }
-  const pf=prevFinal(k);
+  const hintLabel=isFuture?'cierre proy semana anterior':'cierre sem. anterior';
   document.getElementById('open-hint').textContent=(w.openManual==null||w.openManual==='')
-    ?(pf!==null?'auto: cierre sem. anterior ('+clp(pf)+')':'ingresa el saldo del lunes'):'';
+    ?(pf!==null?'auto: '+hintLabel+' ('+clp(pf)+')':'ingresa el saldo del lunes'):'';
 
   // Egresos summary card
   const totalEgrProy=c.fijosProy+c.gerProy+c.varProy+c.ivaProy+c.ppmProy;
