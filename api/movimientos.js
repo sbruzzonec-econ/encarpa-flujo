@@ -3,7 +3,10 @@ const Airtable = require('airtable');
 // Normalize Airtable date to YYYY-MM-DD
 function nd(d){ return d ? d.toString().slice(0,10) : ''; }
 
-// Mapping: Airtable concept → app category
+// Safely extract value from field (handles arrays and plain values)
+function fv(f){ return Array.isArray(f) ? (f[0]||'').toString().trim() : (f||'').toString().trim(); }
+
+// Mapping: Airtable concept name → app category
 const EGRESO_MAP = {
   'Combustible y peajes':              'variables',
   'Sueldo no base':                    'variables',
@@ -21,14 +24,6 @@ const EGRESO_MAP = {
   'PPM':                               'ppm',
   'Amortización préstamos bancarios':  'amort',
 };
-// Anything not in the map → 'otros'
-
-const INCOME_CONCEPTS = [
-  'Abono cliente',
-  'Saldo pendiente cliente',
-  'Factoring',
-  'Devolución por nota de crédito',
-];
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -49,7 +44,8 @@ module.exports = async (req, res) => {
     const records = await base('Movimientos de caja')
       .select({
         filterByFormula: formula,
-        fields: ['Fecha del movimiento', 'Monto neto', 'Flujo', 'Concepto', 'Personal vinculado'],
+        fields: ['Fecha del movimiento', 'Monto neto', 'Flujo', 'Concepto',
+                 'Item (de Concepto)', 'Personal vinculado'],
         view: 'Todos los movimientos',
       })
       .all();
@@ -60,25 +56,28 @@ module.exports = async (req, res) => {
     for (const r of records) {
       const f = r.fields;
       const monto = Math.abs(parseFloat(f['Monto neto']) || 0);
-      const concepto = Array.isArray(f['Concepto'])
-        ? (f['Concepto'][0] || '').toString().trim()
-        : (f['Concepto'] || '').toString().trim();
-      const personal = Array.isArray(f['Personal vinculado']) ? f['Personal vinculado'].join(', ') : '';
+      // Use "Item (de Concepto)" for readable concept name
+      const concepto = fv(f['Item (de Concepto)']) || fv(f['Concepto']);
+      const personal = Array.isArray(f['Personal vinculado'])
+        ? f['Personal vinculado'].join(', ')
+        : (f['Personal vinculado'] || '');
       const fecha = nd(f['Fecha del movimiento']);
       const desc = personal ? `${concepto} — ${personal}` : concepto;
+      // Flujo is an array like ["Ingreso"] or ["Egreso"]
+      const flujo = fv(f['Flujo']);
 
-      if (f['Flujo'] === 'Ingreso') {
-        ingresos.push({ desc, amount: monto, fecha, source: 'airtable' });
+      if (flujo === 'Ingreso') {
+        ingresos.push({ id: r.id, desc, amount: monto, fecha, concepto, source: 'airtable' });
       } else {
         const cat = EGRESO_MAP[concepto] || 'otros';
         const item = { id: r.id, desc, amount: monto, fecha, concepto, source: 'airtable' };
-        if (cat === 'variables') variables.push(item);
-        else if (cat === 'fijos')   fijos.push(item);
+        if (cat === 'variables')  variables.push(item);
+        else if (cat === 'fijos')     fijos.push(item);
         else if (cat === 'gerencial') gerencial.push(item);
-        else if (cat === 'iva')     iva.push(item);
-        else if (cat === 'ppm')     ppm.push(item);
-        else if (cat === 'amort')   amort.push(item);
-        else                         otros.push(item);
+        else if (cat === 'iva')       iva.push(item);
+        else if (cat === 'ppm')       ppm.push(item);
+        else if (cat === 'amort')     amort.push(item);
+        else                          otros.push(item);
       }
     }
 
