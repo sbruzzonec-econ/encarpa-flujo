@@ -57,7 +57,9 @@ module.exports = async (req, res) => {
     for (const r of records) {
       const f = r.fields;
       const monto = Math.abs(parseFloat(f['Monto neto']) || 0);
-      const concepto = (f['Concepto'] || '').trim();
+      const concepto = Array.isArray(f['Concepto'])
+        ? (f['Concepto'][0] || '').toString().trim()
+        : (f['Concepto'] || '').toString().trim();
       const personal = Array.isArray(f['Personal vinculado']) ? f['Personal vinculado'].join(', ') : '';
       const fecha = f['Fecha del movimiento'] || '';
       const desc = personal ? `${concepto} — ${personal}` : concepto;
