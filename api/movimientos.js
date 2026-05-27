@@ -1,5 +1,8 @@
 const Airtable = require('airtable');
 
+// Normalize Airtable date to YYYY-MM-DD
+function nd(d){ return d ? d.toString().slice(0,10) : ''; }
+
 // Mapping: Airtable concept → app category
 const EGRESO_MAP = {
   'Combustible y peajes':              'variables',
@@ -61,7 +64,7 @@ module.exports = async (req, res) => {
         ? (f['Concepto'][0] || '').toString().trim()
         : (f['Concepto'] || '').toString().trim();
       const personal = Array.isArray(f['Personal vinculado']) ? f['Personal vinculado'].join(', ') : '';
-      const fecha = f['Fecha del movimiento'] || '';
+      const fecha = nd(f['Fecha del movimiento']);
       const desc = personal ? `${concepto} — ${personal}` : concepto;
 
       if (f['Flujo'] === 'Ingreso') {
