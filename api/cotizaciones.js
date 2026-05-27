@@ -1,5 +1,8 @@
 const Airtable = require('airtable');
 
+// Normalize Airtable date to YYYY-MM-DD
+function nd(d){ return d ? d.toString().slice(0,10) : ''; }
+
 // Add N business days to a date (no Chilean holidays in v1)
 function addBusinessDays(dateStr, days) {
   const d = new Date(dateStr + 'T12:00:00');
@@ -42,8 +45,8 @@ module.exports = async (req, res) => {
       if (monto <= 0) continue;
 
       const condicion = (f['Condición de venta'] || '').trim();
-      const fechaInstalacion = (f['Fecha instalación'] || '').trim();
-      const fechaFacturacion = (f['Fecha de facturación'] || '').trim();
+      const fechaInstalacion = nd(f['Fecha instalación']);
+      const fechaFacturacion = nd(f['Fecha de facturación']);
       const pagoADias = parseInt(f['Pago a días']) || 0;
 
       let fechaPago = null;
