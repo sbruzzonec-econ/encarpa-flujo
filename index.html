@@ -798,7 +798,20 @@ function cc(n){return n>=0?'pos':'neg';}
 
 // ==================== RENDER ====================
 function render(){
-  const k=CWK;const w=getW(k);const c=calcW(k);
+  const k=CWK;const w=getW(k);
+  // Inject Airtable real/projected data (display only, no localStorage save)
+  const _at=atForWeek(k);
+  if(_at.ingReal.length)   w.incomeReal       =(w.incomeReal||[]).concat(_at.ingReal);
+  if(_at.ingProy.length)   w.incomeProy       =(w.incomeProy||[]).concat(_at.ingProy);
+  if(_at.fijosReal.length) w.fijosRealItems   =(w.fijosRealItems||[]).concat(_at.fijosReal);
+  if(_at.varReal.length)   w.varRealItems     =(w.varRealItems||[]).concat(_at.varReal);
+  if(_at.gerReal.length)   w.gerencialRealItems=(w.gerencialRealItems||[]).concat(_at.gerReal);
+  if(_at.otrosReal.length) w.otrosEgresoItems =(w.otrosEgresoItems||[]).concat(_at.otrosReal);
+  if(_at.amortItems.length)w.amortizaciones   =(w.amortizaciones||[]).concat(_at.amortItems.map(i=>({id:i.id,debtId:'d3',amount:i.amount,desc:i.desc})));
+  if(!w.m2eq&&_at.m2eq)   w.m2eq=_at.m2eq;
+  w.ivaReal =(w.ivaReal||0) +_at.ivaItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+  w.ppmReal =(w.ppmReal||0) +_at.ppmItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+  const c=calcW(k);
   const todayKey=monKey(new Date());
   const isFuture=k>todayKey;
   document.getElementById('flow-card').classList.toggle('future-week',isFuture);
