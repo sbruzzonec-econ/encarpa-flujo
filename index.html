@@ -895,7 +895,7 @@ function render(){
   otrosSel.innerHTML=otrosCs.length?otrosCs.map(x=>`<option value="${x.id}">${x.name}</option>`).join(''):'<option value="">Sin conceptos — ve a Conceptos</option>';
   const otrosList=document.getElementById('otros-list');
   const otrosItems=w.otrosEgresoItems||[];
-  otrosList.innerHTML=otrosItems.length?otrosItems.map(i=>`<div class="row"><span>${i.conceptName}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${i.source!=='airtable'?`<button class="bx" onclick="delOtros('${i.id}')">×</button>`:''}</div></div>`).join(''):'';
+  otrosList.innerHTML=otrosItems.length?otrosItems.map(i=>`<div class="row"><span>${i.desc||i.conceptName||''}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${i.source!=='airtable'?`<button class="bx" onclick="delOtros('${i.id}')">×</button>`:''}</div></div>`).join(''):'';
   // Income lists
   rInc('list-ip',w.incomeProy||[],'incomeProy','bb','Proy');
   rInc('list-ir',w.incomeReal||[],'incomeReal','bg','Real');
