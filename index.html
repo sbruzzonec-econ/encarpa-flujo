@@ -186,7 +186,7 @@ body.viewer-mode .admin-only{display:none!important}
     <div class="tbtn on" onclick="setTab('flujo',this)">Flujo semanal</div>
     <div class="tbtn" onclick="setTab('proyeccion',this)">Proyección</div>
     <div class="tbtn" onclick="setTab('deudas',this)">Deudas</div>
-    <div class="tbtn admin-only" onclick="setTab('pendientes',this)">Pendientes</div>
+    <div class="tbtn admin-only" onclick="setTab('pendientes',this);renderPendientes()">Pendientes</div>
     <div class="tbtn" onclick="setTab('conceptos',this)">Conceptos</div>
   </div>
 </div>
@@ -1398,10 +1398,16 @@ async function syncAirtable(){
     const from=new Date(now);from.setDate(from.getDate()-56);
     const to=new Date(now);to.setDate(to.getDate()+56);
     const fmt=d=>d.toISOString().slice(0,10);
+    const opts={cache:'no-store'};
+    async function fetchJSON(url){
+      const r=await fetch(url,opts);
+      if(!r.ok){const t=await r.text();throw new Error(`${url} → ${r.status}: ${t.slice(0,200)}`);}
+      return r.json();
+    }
     const [movR,opR,cotR]=await Promise.all([
-      fetch(`/api/movimientos?start=${fmt(from)}&end=${fmt(to)}`).then(r=>r.json()),
-      fetch(`/api/operaciones?start=${fmt(from)}&end=${fmt(to)}`).then(r=>r.json()),
-      fetch('/api/cotizaciones').then(r=>r.json()),
+      fetchJSON(`/api/movimientos?start=${fmt(from)}&end=${fmt(to)}`),
+      fetchJSON(`/api/operaciones?start=${fmt(from)}&end=${fmt(to)}`),
+      fetchJSON('/api/cotizaciones'),
     ]);
     // Store raw (render will filter by week)
     AT.ingresos=movR.ingresos||[];
@@ -1427,8 +1433,8 @@ async function syncAirtable(){
     setSyncStatus('Actualizado '+new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}),false);
     render();
   }catch(err){
-    setSyncStatus('Error al sincronizar',false);
-    console.error(err);
+    setSyncStatus('Error: '+err.message.slice(0,80),false);
+    console.error('Sync error:',err);
   }
   AT_LOADING=false;
 }
@@ -1508,11 +1514,7 @@ function removePendiente(cotId){
 }
 
 // ==================== ADD PENDING TAB TO setTab ====================
-const _origSetTab=setTab;
-function setTab(name,el){
-  _origSetTab(name,el);
-  if(name==='pendientes')renderPendientes();
-}
+// Pendientes tab is handled by its onclick directly - no override needed
 
 // ==================== INIT ====================
 // Register Service Worker
