@@ -895,7 +895,7 @@ function render(){
   otrosSel.innerHTML=otrosCs.length?otrosCs.map(x=>`<option value="${x.id}">${x.name}</option>`).join(''):'<option value="">Sin conceptos — ve a Conceptos</option>';
   const otrosList=document.getElementById('otros-list');
   const otrosItems=w.otrosEgresoItems||[];
-  otrosList.innerHTML=otrosItems.length?otrosItems.map(i=>`<div class="row"><span>${i.conceptName}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span><button class="bx" onclick="delOtros('${i.id}')">×</button></div></div>`).join(''):'';
+  otrosList.innerHTML=otrosItems.length?otrosItems.map(i=>`<div class="row"><span>${i.conceptName}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${i.source!=='airtable'?`<button class="bx" onclick="delOtros('${i.id}')">×</button>`:''}</div></div>`).join(''):'';
   // Income lists
   rInc('list-ip',w.incomeProy||[],'incomeProy','bb','Proy');
   rInc('list-ir',w.incomeReal||[],'incomeReal','bg','Real');
@@ -908,7 +908,7 @@ function render(){
   fl.innerHTML=c.fCs.length?c.fCs.map(x=>`<div class="row"><span>${x.name}</span><span class="neg-dim" style="font-weight:600">${clp(x.amount)}</span></div>`).join(''):'<div class="empty">Sin gastos fijos esta semana</div>';
   const flr=document.getElementById('list-fijos-real');
   const fijosRealItems=w.fijosRealItems||[];
-  flr.innerHTML=fijosRealItems.length?fijosRealItems.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span><button class="bx" onclick="delFijosReal('${i.id}')">×</button></div></div>`).join(''):'<div class="empty">Sin pagos fijos reales aún</div>';
+  flr.innerHTML=fijosRealItems.length?fijosRealItems.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${i.source!=='airtable'?`<button class="bx" onclick="delFijosReal('${i.id}')">×</button>`:''}</div></div>`).join(''):'<div class="empty">Sin pagos fijos reales aún</div>';
 
   // Gerencial
   const gpl=document.getElementById('list-gp');
@@ -950,7 +950,7 @@ function render(){
   debtSel.innerHTML=activeDebts.length?activeDebts.map(d=>`<option value="${d.id}">${d.name}</option>`).join(''):'<option value="">Sin deudas registradas</option>';
   const amortList=document.getElementById('amort-list');
   const amorts=w.amortizaciones||[];
-  amortList.innerHTML=amorts.length?amorts.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid #f0f3f7"><div><span class="badge br">Amort.</span>${a.debtName}</div><div style="display:flex;align-items:center;gap:8px"><span class="neg" style="font-weight:600">${clp(parseFloat(a.amount))}</span><button class="bx" onclick="delAmort('${a.id}')">×</button></div></div>`).join(''):'';
+  amortList.innerHTML=amorts.length?amorts.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid #f0f3f7"><div><span class="badge br">Amort.</span>${a.debtName}</div><div style="display:flex;align-items:center;gap:8px"><span class="neg" style="font-weight:600">${clp(parseFloat(a.amount))}</span>${a.source!=='airtable'?`<button class="bx" onclick="delAmort('${a.id}')">×</button>`:''}</div></div>`).join(''):'';
   // Charts
   renderCharts(c);
   renderUnpaid();
@@ -965,7 +965,7 @@ function rInc(lid,items,field,bcls,label){
 function rGerReal(w,c){
   const el=document.getElementById('list-gr');
   const items=w.gerencialRealItems||[];
-  el.innerHTML=items.length?items.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span><button class="bx" onclick="delGR('${i.id}')">×</button></div></div>`).join(''):'<div class="empty">Sin retiros reales registrados</div>';
+  el.innerHTML=items.length?items.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${i.source!=='airtable'?`<button class="bx" onclick="delGR('${i.id}')">×</button>`:''}</div></div>`).join(''):'<div class="empty">Sin retiros reales registrados</div>';
 }
 
 const catNVar={combustible:'Combustible',insumos:'Insumos',sueldo_var:'Sueldo variable',transporte:'Transporte',costuras:'Costuras',comisiones:'Comisiones',otro:'Otro'};
