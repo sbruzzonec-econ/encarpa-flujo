@@ -27,6 +27,8 @@ module.exports = async (req, res) => {
           'Fecha instalación',
           'Fecha de facturación',
           'Pago a días',
+          'Nombre cuenta',
+          'ID',
         ],
       })
       .all();
@@ -68,6 +70,11 @@ module.exports = async (req, res) => {
         motivo = `Condición desconocida: ${condicion}`;
       }
 
+      const nombreCuenta = Array.isArray(f['Nombre cuenta'])
+        ? (f['Nombre cuenta'][0] || '').toString().trim()
+        : (f['Nombre cuenta'] || '').toString().trim();
+      const idCot = f['ID'] || r.id;
+
       const entry = {
         id: r.id,
         monto,
@@ -75,6 +82,8 @@ module.exports = async (req, res) => {
         fechaInstalacion,
         fechaFacturacion,
         pagoADias,
+        desc: nombreCuenta || `Cotización ${r.id}`,
+        idCot,
       };
 
       if (fechaPago) {
