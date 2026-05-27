@@ -973,7 +973,7 @@ function rVarReal(w){
   const el=document.getElementById('list-vr');
   const items=w.varRealItems||[];
   if(!items.length){el.innerHTML='<div class="empty">Sin egresos variables reales</div>';return;}
-  el.innerHTML=items.map(i=>`<div class="row"><div><span class="badge br">${catNVar[i.cat]||i.cat}</span>${i.desc}</div><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span><button class="bx" onclick="delVR('${i.id}')">×</button></div></div>`).join('');
+  el.innerHTML=items.map(i=>`<div class="row"><div>${i.cat?`<span class="badge br">${catNVar[i.cat]||i.cat}</span>`:''} ${i.desc}</div><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${i.source!=='airtable'?`<button class="bx" onclick="delVR('${i.id}')">×</button>`:''}</div></div>`).join('');
 }
 
 // ==================== MUTATIONS ====================
