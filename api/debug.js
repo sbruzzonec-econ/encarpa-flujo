@@ -6,20 +6,14 @@ module.exports = async (req, res) => {
     const base = new Airtable({ apiKey: process.env.AIRTABLE_TOKEN })
       .base(process.env.AIRTABLE_BASE_ID);
 
-    // Fetch last 5 records from Movimientos de caja
-    const records = await base('Movimientos de caja')
-      .select({
-        maxRecords: 5,
-        view: 'Todos los movimientos',
-      })
+    const table = req.query.tabla || 'Movimientos de caja';
+    const view  = req.query.vista  || undefined;
+
+    const records = await base(table)
+      .select({ maxRecords: 3, ...(view ? {view} : {}) })
       .firstPage();
 
-    const sample = records.map(r => ({
-      id: r.id,
-      fields: r.fields
-    }));
-
-    res.json({ ok: true, sample });
+    res.json({ tabla: table, sample: records.map(r => ({ id: r.id, fields: r.fields })) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
