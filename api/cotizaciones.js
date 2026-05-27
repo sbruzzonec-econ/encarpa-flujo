@@ -3,15 +3,10 @@ const Airtable = require('airtable');
 // Normalize Airtable date to YYYY-MM-DD
 function nd(d){ return d ? d.toString().slice(0,10) : ''; }
 
-// Add N business days to a date (no Chilean holidays in v1)
-function addBusinessDays(dateStr, days) {
+// Add N calendar days to a date (días corridos, no hábiles)
+function addCalendarDays(dateStr, days) {
   const d = new Date(dateStr + 'T12:00:00');
-  let added = 0;
-  while (added < days) {
-    d.setDate(d.getDate() + 1);
-    const dow = d.getDay();
-    if (dow !== 0 && dow !== 6) added++;
-  }
+  d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
 
@@ -63,7 +58,7 @@ module.exports = async (req, res) => {
         }
       } else if (condicion === 'Contra factura') {
         if (fechaFacturacion && pagoADias > 0) {
-          fechaPago = addBusinessDays(fechaFacturacion, pagoADias);
+          fechaPago = addCalendarDays(fechaFacturacion, pagoADias);
         } else if (!fechaFacturacion) {
           motivo = 'Sin fecha de facturación';
         } else if (!pagoADias) {
