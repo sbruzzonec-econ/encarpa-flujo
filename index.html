@@ -1187,16 +1187,22 @@ function togSec(detId,hdrEl){
 // ==================== DASHBOARD ====================
 function renderDash(){
   const totalDebt=S.debts.filter(d=>d.active).reduce((s,d)=>s+d.total,0);
+  // Amortizaciones desde flujo semanal (afectan caja real)
   const amortByDebt={};
   Object.values(S.weeks).forEach(w=>{(w.amortizaciones||[]).forEach(a=>{amortByDebt[a.debtId]=(amortByDebt[a.debtId]||0)+(parseFloat(a.amount)||0);});});
-  const totalAmort=Object.values(amortByDebt).reduce((s,v)=>s+v,0);
+  const totalAmortFlow=Object.values(amortByDebt).reduce((s,v)=>s+v,0);
+  // Amortizaciones manuales en Deudas (solo para saldo, no afectan flujo)
+  const totalManualAmort=S.debts.filter(d=>d.active).reduce((s,d)=>s+(parseFloat(d.manualAmort)||0),0);
+  const totalAmort=totalAmortFlow+totalManualAmort;
   const debtBal=Math.max(totalDebt-totalAmort,0);
   document.getElementById('d-deuda').textContent=clp(debtBal);
   document.getElementById('d-dh').textContent=clp(totalDebt)+' total − '+clp(totalAmort)+' amortizado';
   const dl=document.getElementById('debt-list');
   if(!S.debts.length){dl.innerHTML='<div class="empty">Sin deudas</div>';}
   else{dl.innerHTML=S.debts.filter(d=>d.active).map(d=>{
-    const dAmort=amortByDebt[d.id]||0;
+    const dAmortFlow=amortByDebt[d.id]||0;
+    const dManual=parseFloat(d.manualAmort)||0;
+    const dAmort=dAmortFlow+dManual;
     const dBal=Math.max(d.total-dAmort,0);
     const pct=d.total>0?Math.min(dAmort/d.total*100,100):0;
     return`<div style="padding:10px 0;border-bottom:1px solid #f0f3f7">
@@ -1208,15 +1214,17 @@ function renderDash(){
         </div>
       </div>
       <div id="dbt-edit-${d.id}" style="display:none;margin-bottom:8px;background:#f7f9fc;border-radius:8px;padding:10px">
-        <input type="number" id="dbt-inp-${d.id}" value="${d.total}" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:14px;width:100%;margin-bottom:8px"
-          onkeydown="if(event.key==='Enter')saveDebt('${d.id}',+this.value)">
+        <div style="font-size:11px;color:#6b7a8d;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Monto total adeudado</div>
+        <input type="number" id="dbt-inp-${d.id}" value="${d.total}" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:14px;width:100%;margin-bottom:10px">
+        <div style="font-size:11px;color:#6b7a8d;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Monto amortizado (no afecta flujo semanal)</div>
+        <input type="number" id="dbt-mamort-${d.id}" value="${dManual||''}" placeholder="0" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:14px;width:100%;margin-bottom:10px">
         <div style="display:flex;gap:8px">
-          <button class="btn bsm btnp" style="flex:1" onclick="saveDebt('${d.id}',+document.getElementById('dbt-inp-${d.id}').value)">Guardar</button>
-          <button class="btn bsm" style="color:#c0392b;flex:1" onclick="if(confirm('¿Eliminar esta deuda?'))rmDebt('${d.id}')">Eliminar deuda</button>
+          <button class="btn bsm btnp" style="flex:1" onclick="saveDebt('${d.id}',+document.getElementById('dbt-inp-${d.id}').value,+(document.getElementById('dbt-mamort-${d.id}').value||0))">Guardar</button>
+          <button class="btn bsm" style="color:#c0392b;flex:1" onclick="if(confirm('\u00BFEliminar esta deuda?'))rmDebt('${d.id}')">Eliminar deuda</button>
         </div>
       </div>
       <div style="font-size:12px;color:#6b7a8d;display:flex;justify-content:space-between;margin-bottom:6px">
-        <span>Amortizado: <strong class="pos">${clp(dAmort)}</strong></span>
+        <span>Amortizado: <strong class="pos">${clp(dAmort)}</strong>${dManual>0?` <span style="opacity:.6;font-size:11px">(+${clp(dManual)} manual)</span>`:''}</span>
         <span>Saldo: <strong class="neg">${clp(dBal)}</strong></span>
       </div>
       <div class="bar"><div class="barf" style="width:${pct}%;background:#1a7a3c"></div></div>
@@ -1244,8 +1252,9 @@ function editDebt(id){
   el.style.display=open?'none':'block';
   if(!open){const inp=el.querySelector('input');inp.focus();inp.select();}
 }
-function saveDebt(id,val){
-  updDebt(id,val);
+function saveDebt(id,val,manualAmort){
+  const d=S.debts.find(x=>x.id===id);
+  if(d){d.total=val;d.manualAmort=manualAmort||0;save();}
   const el=document.getElementById('dbt-edit-'+id);
   if(el)el.style.display='none';
   renderDash();
