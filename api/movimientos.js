@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
       .select({
         filterByFormula: formula,
         fields: ['Fecha del movimiento', 'Monto neto', 'Flujo', 'Concepto',
-                 'Item (de Concepto)', 'Personal vinculado'],
+                 'Item (de Concepto)', 'Personal vinculado', 'Descripción'],
         view: 'Todos los movimientos',
       })
       .all();
@@ -58,11 +58,12 @@ module.exports = async (req, res) => {
       const monto = Math.abs(parseFloat(f['Monto neto']) || 0);
       // Use "Item (de Concepto)" for readable concept name
       const concepto = fv(f['Item (de Concepto)']) || fv(f['Concepto']);
+      const descripcion = (f['Descripción'] || '').toString().trim() || concepto;
       const personal = Array.isArray(f['Personal vinculado'])
         ? f['Personal vinculado'].join(', ')
         : (f['Personal vinculado'] || '');
       const fecha = nd(f['Fecha del movimiento']);
-      const desc = personal ? `${concepto} — ${personal}` : concepto;
+      const desc = personal ? `${descripcion} — ${personal}` : descripcion;
       // Flujo is an array like ["Ingreso"] or ["Egreso"]
       const flujo = fv(f['Flujo']);
 
