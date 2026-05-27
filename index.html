@@ -731,6 +731,17 @@ function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.pa
     const rest=S.debts.filter(d=>!ORDER.includes(d.name));
     S.debts=[...top,...rest];
   }
+  // Migración: limpiar datos AT acumulados incorrectamente en localStorage
+  const AT_FIELDS=['incomeReal','incomeProy','fijosRealItems','varRealItems',
+                   'gerencialRealItems','otrosEgresoItems','amortizaciones'];
+  Object.keys(S.weeks||{}).forEach(k=>{
+    const w=S.weeks[k];if(!w)return;
+    AT_FIELDS.forEach(f=>{
+      if(Array.isArray(w[f]))
+        w[f]=w[f].filter(i=>i.source!=='airtable'&&i.source!=='manual-pendiente');
+    });
+  });
+  save();
 }}catch(e){}}
 
 // ==================== WEEK UTILS ====================
