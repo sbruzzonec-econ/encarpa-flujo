@@ -798,20 +798,26 @@ function cc(n){return n>=0?'pos':'neg';}
 
 // ==================== RENDER ====================
 function render(){
-  const k=CWK;const w=getW(k);
-  // Inject Airtable real/projected data (display only, no localStorage save)
+  const k=CWK;
+  const _wOrig=getW(k);
   const _at=atForWeek(k);
-  if(_at.ingReal.length)   w.incomeReal       =(w.incomeReal||[]).concat(_at.ingReal);
-  if(_at.ingProy.length)   w.incomeProy       =(w.incomeProy||[]).concat(_at.ingProy);
-  if(_at.fijosReal.length) w.fijosRealItems   =(w.fijosRealItems||[]).concat(_at.fijosReal);
-  if(_at.varReal.length)   w.varRealItems     =(w.varRealItems||[]).concat(_at.varReal);
-  if(_at.gerReal.length)   w.gerencialRealItems=(w.gerencialRealItems||[]).concat(_at.gerReal);
-  if(_at.otrosReal.length) w.otrosEgresoItems =(w.otrosEgresoItems||[]).concat(_at.otrosReal);
-  if(_at.amortItems.length)w.amortizaciones   =(w.amortizaciones||[]).concat(_at.amortItems.map(i=>({id:i.id,debtId:'d3',amount:i.amount,desc:i.desc})));
-  if(!w.m2eq&&_at.m2eq)   w.m2eq=_at.m2eq;
-  w.ivaReal =(w.ivaReal||0) +_at.ivaItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
-  w.ppmReal =(w.ppmReal||0) +_at.ppmItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+  // Build display-only merged object (never saved to localStorage)
+  const w={..._wOrig,
+    incomeReal:   [...(_wOrig.incomeReal||[]),   ..._at.ingReal],
+    incomeProy:   [...(_wOrig.incomeProy||[]),   ..._at.ingProy],
+    fijosRealItems:    [...(_wOrig.fijosRealItems||[]),    ..._at.fijosReal],
+    varRealItems:      [...(_wOrig.varRealItems||[]),      ..._at.varReal],
+    gerencialRealItems:[...(_wOrig.gerencialRealItems||[]),..._at.gerReal],
+    otrosEgresoItems:  [...(_wOrig.otrosEgresoItems||[]),  ..._at.otrosReal],
+    m2eq:  _wOrig.m2eq||_at.m2eq,
+    ivaReal: (_wOrig.ivaReal||0)+_at.ivaItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
+    ppmReal: (_wOrig.ppmReal||0)+_at.ppmItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
+  };
+  // Temporarily inject merged data so calcW uses it, then restore immediately
+  const _saved=S.weeks[k];
+  S.weeks[k]=w;
   const c=calcW(k);
+  S.weeks[k]=_saved;
   const todayKey=monKey(new Date());
   const isFuture=k>todayKey;
   document.getElementById('flow-card').classList.toggle('future-week',isFuture);
