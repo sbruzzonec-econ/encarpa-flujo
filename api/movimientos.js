@@ -82,8 +82,11 @@ module.exports = async (req, res) => {
       const fecha  = nd(f['Fecha del movimiento']);
       const flujo  = fv(f['Flujo']);
 
-      // Display: use Descripción if available, else concept + personal
-      const desc = descripcion || (personal ? `${concepto} — ${personal}` : concepto);
+      // Display description: prefer Descripción; if personal is a real name (not ID), append it
+      const isRecordId = personal.startsWith('rec') && personal.length > 10 && !personal.includes(' ');
+      const personalDisplay = isRecordId ? '' : personal;
+      const desc = descripcion
+        || (personalDisplay ? `${concepto} — ${personalDisplay}` : concepto);
 
       if (flujo === 'Ingreso') {
         ingresos.push({ id: r.id, desc, amount: monto, fecha, concepto, source: 'airtable' });
