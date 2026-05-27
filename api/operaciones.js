@@ -1,5 +1,8 @@
 const Airtable = require('airtable');
 
+// Normalize Airtable date to YYYY-MM-DD
+function nd(d){ return d ? d.toString().slice(0,10) : ''; }
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -28,7 +31,10 @@ module.exports = async (req, res) => {
       s + (parseFloat(r.fields['Mts2 equivalentes']) || 0), 0
     );
 
-    res.json({ m2eq: Math.round(total), records: records.map(r => r.fields) });
+    res.json({ m2eq: Math.round(total), records: records.map(r => ({
+      'Mts2 equivalentes': r.fields['Mts2 equivalentes'],
+      'Fecha inicio': nd(r.fields['Fecha inicio'])
+    })) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
