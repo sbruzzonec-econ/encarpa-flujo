@@ -739,7 +739,38 @@ const DD=[
 ];
 
 let S={settings:{tasaM2eq:1009},concepts:[...DC],debts:[...DD],weeks:{}};
-function save(){try{localStorage.setItem('enc_v3',JSON.stringify(S));}catch(e){}}
+// ==================== STATE SYNC ====================
+const LS_KEY='enc_v3';
+let _saveTimer=null;
+function save(){
+  S.lastModified=Date.now();
+  try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+  // Debounce cloud save: wait 800ms after last save
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    fetch('/api/app-state',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({state:S})}).catch(()=>{});
+  },800);
+}
+async function cloudLoad(){
+  try{
+    const r=await fetch('/api/app-state');
+    if(!r.ok)return false;
+    const d=await r.json();
+    if(!d.state)return false;
+    const cloud=d.state;
+    const localMod=(S&&S.lastModified)||0;
+    const cloudMod=cloud.lastModified||0;
+    if(cloudMod>localMod){
+      const p=cloud;
+      S={...S,...p};
+      if(!S.settings)S.settings={tasaM2eq:1009};
+      try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+      return true; // updated
+    }
+    return false;
+  }catch(e){return false;}
+}
 function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.parse(r);S={...S,...p};if(!S.settings)S.settings={tasaM2eq:1009};
   // Migración: reordenar deudas con Línea y Tarjeta de Crédito primero
   const ORDER=['Línea de Crédito','Tarjeta de Crédito'];
@@ -1426,7 +1457,7 @@ function enterViewer(){
   document.body.classList.add('viewer-mode');
   document.getElementById('auth-screen').style.display='none';
   sessionStorage.setItem('enc_mode','viewer');
-  load();render();syncAirtable();
+  load();render();syncAirtable();cloudLoad().then(updated=>{if(updated){render();}});
 }
 function showPinInput(){
   document.getElementById('pin-wrap').style.display='block';
@@ -1449,7 +1480,7 @@ async function submitPin(){
     if(d.ok){
       document.getElementById('auth-screen').style.display='none';
       sessionStorage.setItem('enc_mode','admin');
-      load();render();syncAirtable();
+      load();render();syncAirtable();cloudLoad().then(updated=>{if(updated){render();}});
     } else {
       document.getElementById('pin-error').textContent='PIN incorrecto';
       document.getElementById('pin-input').value='';
@@ -1607,8 +1638,14 @@ const _mode=sessionStorage.getItem('enc_mode');
 if(_mode){
   if(_mode==='viewer')document.body.classList.add('viewer-mode');
   document.getElementById('auth-screen').style.display='none';
-  load();render();syncAirtable();
+  load();render();syncAirtable();cloudLoad().then(updated=>{if(updated){render();}});
 }
+// Sync on tab/window focus (catches switching devices or tabs)
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&sessionStorage.getItem('enc_mode')){
+    cloudLoad().then(updated=>{if(updated){render();syncAirtable();}});
+  }
+});
 </script>
 </body>
 </html>
