@@ -765,13 +765,8 @@ async function cloudLoad(){
     if(!r.ok)return false;
     const d=await r.json();
     if(!d.state)return false;
-    // Cloud is source of truth: always use it if it exists
-    const p=d.state;
-    const cloudMod=p.lastModified||0;
-    const localMod=(S&&S.lastModified)||0;
-    // Only skip if local is strictly newer (unsaved local changes)
-    if(localMod>cloudMod+2000)return false;
-    S={...S,...p};
+    // Cloud is always source of truth — no timestamp comparison
+    S={...S,...d.state};
     if(!S.settings)S.settings={tasaM2eq:1009};
     try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
     return true;
@@ -1463,7 +1458,7 @@ function enterViewer(){
   document.body.classList.add('viewer-mode');
   document.getElementById('auth-screen').style.display='none';
   sessionStorage.setItem('enc_mode','viewer');
-  load();render();syncAirtable();cloudLoad().then(updated=>{if(updated){render();}});
+  load();render();cloudLoad().then(updated=>{if(updated)render();syncAirtable();});
 }
 function showPinInput(){
   document.getElementById('pin-wrap').style.display='block';
@@ -1486,7 +1481,7 @@ async function submitPin(){
     if(d.ok){
       document.getElementById('auth-screen').style.display='none';
       sessionStorage.setItem('enc_mode','admin');
-      load();render();syncAirtable();cloudLoad().then(updated=>{if(updated){render();}});
+      load();render();cloudLoad().then(updated=>{if(updated)render();syncAirtable();});
     } else {
       document.getElementById('pin-error').textContent='PIN incorrecto';
       document.getElementById('pin-input').value='';
@@ -1644,12 +1639,12 @@ const _mode=sessionStorage.getItem('enc_mode');
 if(_mode){
   if(_mode==='viewer')document.body.classList.add('viewer-mode');
   document.getElementById('auth-screen').style.display='none';
-  load();render();syncAirtable();cloudLoad().then(updated=>{if(updated){render();}});
+  load();render();cloudLoad().then(updated=>{if(updated)render();syncAirtable();});
 }
 // Sync on tab/window focus (catches switching devices or tabs)
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&sessionStorage.getItem('enc_mode')){
-    cloudLoad().then(updated=>{if(updated){render();syncAirtable();}});
+    cloudLoad().then(updated=>{if(updated)render();syncAirtable();});
   }
 });
 </script>
