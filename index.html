@@ -179,6 +179,7 @@ body.viewer-mode .admin-only{display:none!important}
 <!-- SYNC BUTTON -->
 <button id="sync-btn" onclick="syncAirtable()" title="Sincronizar datos">↻</button>
 <div id="sync-status"></div>
+<div id="cloud-ind" style="position:fixed;bottom:16px;left:16px;font-size:18px;z-index:9000;opacity:.85"></div>
 
 <div class="wrap">
 <div class="hdr">
@@ -745,12 +746,18 @@ let _saveTimer=null;
 function save(){
   S.lastModified=Date.now();
   try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
-  // Debounce cloud save: wait 800ms after last save
+  // Debounce cloud save
   clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(()=>{
-    fetch('/api/app-state',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({state:S})}).catch(()=>{});
-  },800);
+  _saveTimer=setTimeout(async()=>{
+    const ind=document.getElementById('cloud-ind');
+    if(ind){ind.textContent='☁️';ind.title='Guardando en nube...';}
+    try{
+      const r=await fetch('/api/app-state',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({state:S})});
+      if(ind){ind.textContent=r.ok?'✅':'⚠️';ind.title=r.ok?'Guardado en nube':'Error al guardar';}
+      setTimeout(()=>{if(ind)ind.textContent='';},3000);
+    }catch(e){if(ind){ind.textContent='⚠️';ind.title='Sin conexión';}}
+  }, 300);
 }
 async function cloudLoad(){
   try{
@@ -758,17 +765,16 @@ async function cloudLoad(){
     if(!r.ok)return false;
     const d=await r.json();
     if(!d.state)return false;
-    const cloud=d.state;
+    // Cloud is source of truth: always use it if it exists
+    const p=d.state;
+    const cloudMod=p.lastModified||0;
     const localMod=(S&&S.lastModified)||0;
-    const cloudMod=cloud.lastModified||0;
-    if(cloudMod>localMod){
-      const p=cloud;
-      S={...S,...p};
-      if(!S.settings)S.settings={tasaM2eq:1009};
-      try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
-      return true; // updated
-    }
-    return false;
+    // Only skip if local is strictly newer (unsaved local changes)
+    if(localMod>cloudMod+2000)return false;
+    S={...S,...p};
+    if(!S.settings)S.settings={tasaM2eq:1009};
+    try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+    return true;
   }catch(e){return false;}
 }
 function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.parse(r);S={...S,...p};if(!S.settings)S.settings={tasaM2eq:1009};
