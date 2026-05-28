@@ -338,23 +338,38 @@ body.viewer-mode .admin-only{display:none!important}
       <!-- Otros egresos -->
       <div class="cc-sub">
         <div class="cc-hdr" onclick="togSec('det-otros',this)">
-          <div class="cc-left"><span class="chev">▶</span><span class="cc-title">Otros egresos</span></div>
-          <div class="cc-sums"><div class="cc-sum real-sum"><div class="cc-lbl">Real</div><div class="cc-val neg" id="h-otros-r">$0</div></div></div>
+          <div class="cc-left"><span class="chev">&#9658;</span><span class="cc-title">Otros egresos</span></div>
+          <div class="cc-sums">
+            <div class="cc-sum"><div class="cc-lbl">Proyectado</div><div class="cc-val neg-dim" id="h-otros-p">$0</div></div>
+            <div class="cc-sum real-sum"><div class="cc-lbl">Real</div><div class="cc-val neg" id="h-otros-r">$0</div></div>
+          </div>
         </div>
         <div class="cc-det" id="det-otros">
-          <div class="btns" style="margin-top:8px">
-            
-          </div>
-          <div id="otros-form" style="display:none" class="aform">
-            <div class="hint">Selecciona el concepto y el monto. Gestiona los conceptos en la pestaña Conceptos.</div>
-            <div class="ar" style="margin-bottom:8px">
-              <select id="otros-concept" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fff;width:100%"></select>
-              <input type="number" id="otros-amt" placeholder="Monto" style="width:100%">
+          <div class="g2" style="margin-top:8px">
+            <div>
+              <div class="slbl">Proyectado <button class="add-inline" onclick="tgl('otros-proy-form');event.stopPropagation()">+</button></div>
+              <div class="aform" id="otros-proy-form" style="display:none">
+                <div class="hint">Egreso puntual proyectado para esta semana.</div>
+                <input id="otros-proy-d" placeholder="Descripci&#243;n">
+                <input id="otros-proy-a" type="number" placeholder="Monto" style="margin-top:6px">
+                <div style="margin-top:7px"><button class="btn bsm btnp" onclick="addOtrosProy()">Guardar</button> <button class="btn bsm" onclick="tgl('otros-proy-form')">Cancelar</button></div>
+              </div>
+              <div id="list-otros-p"></div>
             </div>
-            <button class="btn bsm btnp" onclick="addOtros()">Guardar</button>
-            <button class="btn bsm" onclick="tgl('otros-form')" style="margin-left:6px">Cancelar</button>
+            <div>
+              <div class="slbl">Real <button class="add-inline add-inline-real" onclick="tgl('otros-form');event.stopPropagation()">+</button></div>
+              <div class="aform" id="otros-form" style="display:none">
+                <div class="hint">Selecciona el concepto y el monto. Gestiona los conceptos en la pesta&#241;a Conceptos.</div>
+                <div class="ar" style="margin-bottom:8px">
+                  <select id="otros-concept" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fff;width:100%"></select>
+                  <input type="number" id="otros-amt" placeholder="Monto" style="width:100%">
+                </div>
+                <button class="btn bsm btnp" onclick="addOtros()">Guardar</button>
+                <button class="btn bsm" onclick="tgl('otros-form')" style="margin-left:6px">Cancelar</button>
+              </div>
+              <div id="otros-list"></div>
+            </div>
           </div>
-          <div id="otros-list"></div>
         </div>
       </div>
 
@@ -796,13 +811,14 @@ function calcW(k, _override, _useProjOpening){
   const ppmReal=parseFloat(w.ppmReal)||0;
   const fijosReal=(w.fijosRealItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const otrosReal=(w.otrosEgresoItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+  const otrosProy=(w.otrosProyItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const gerReal=(w.gerencialRealItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const amort=(w.amortizaciones||[]).reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
   const retx=parseFloat(w.retiroExtra)||0;
-  const projClosing=opening+ingProy-fijosProy-gerProy-varProy-ivaProy-ppmProy;
+  const projClosing=opening+ingProy-fijosProy-gerProy-varProy-ivaProy-ppmProy-otrosProy;
   const realOp=opening+ingReal-fijosReal-gerReal-varReal-ivaReal-ppmReal-amort-otrosReal;
   const saldoFinal=realOp-retx;
-  return{opening,fCs,gCs,fijosProy,fijosReal,gerProy,ingProy,ingReal,m2eq,tasa,varProy,varReal,ivaProy,ivaReal,ppmProy,ppmReal,gerReal,otrosReal,projClosing,realOp,amort,retx,saldoFinal};
+  return{opening,fCs,gCs,fijosProy,fijosReal,gerProy,ingProy,ingReal,m2eq,tasa,varProy,varReal,ivaProy,ivaReal,ppmProy,ppmReal,gerReal,otrosReal,otrosProy,projClosing,realOp,amort,retx,saldoFinal};
 }
 
 // ==================== FORMAT ====================
@@ -856,7 +872,7 @@ function render(){
     ?(pf!==null?'auto: '+hintLabel+' ('+clp(pf)+')':'ingresa el saldo del lunes'):'';
 
   // Egresos summary card
-  const totalEgrProy=c.fijosProy+c.gerProy+c.varProy+c.ivaProy+c.ppmProy;
+  const totalEgrProy=c.fijosProy+c.gerProy+c.varProy+c.ivaProy+c.ppmProy+c.otrosProy;
   const totalEgrReal=c.fijosReal+c.gerReal+c.varReal+c.ivaReal+c.ppmReal+c.amort+c.otrosReal;
   document.getElementById('h-egr-p').textContent=clp(totalEgrProy);
   document.getElementById('h-egr-r').textContent=clp(totalEgrReal);
@@ -890,13 +906,19 @@ function render(){
   // Tasa label
   document.getElementById('tasa-lbl').textContent=(c.tasa).toLocaleString('es-CL');
   // Otros egresos
+  const hOtrosP=document.getElementById('h-otros-p');
+  hOtrosP.textContent=c.otrosProy>0?clp(c.otrosProy):'—';
+  hOtrosP.style.color=c.otrosProy>0?'':'#9aa5b1';
   document.getElementById('h-otros-r').textContent=clp(c.otrosReal);
-  const otrosSel=document.getElementById('otros-concept');
+  const otrosSelEl=document.getElementById('otros-concept');
   const otrosCs=S.concepts.filter(x=>x.cat==='otros_egreso'&&x.active);
-  otrosSel.innerHTML=otrosCs.length?otrosCs.map(x=>`<option value="${x.id}">${x.name}</option>`).join(''):'<option value="">Sin conceptos — ve a Conceptos</option>';
+  otrosSelEl.innerHTML=otrosCs.length?otrosCs.map(x=>`<option value="${x.id}">${x.name}</option>`).join(''):'<option value="">Sin conceptos — ve a Conceptos</option>';
   const otrosList=document.getElementById('otros-list');
   const otrosItems=w.otrosEgresoItems||[];
   otrosList.innerHTML=otrosItems.length?otrosItems.map(i=>`<div class="row"><span>${i.desc||i.conceptName||''}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${i.source!=='airtable'?`<button class="bx" onclick="delOtros('${i.id}')">×</button>`:''}</div></div>`).join(''):'';
+  const otrosProyList=document.getElementById('list-otros-p');
+  const otrosProyItems=w.otrosProyItems||[];
+  otrosProyList.innerHTML=otrosProyItems.length?otrosProyItems.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg-dim" style="font-weight:600">${clp(parseFloat(i.amount))}</span><button class="bx" onclick="delOtrosProy('${i.id}')">×</button></div></div>`).join(''):'';
   // Income lists
   rInc('list-ip',w.incomeProy||[],'incomeProy','bb','Proy');
   rInc('list-ir',w.incomeReal||[],'incomeReal','bg','Real');
@@ -995,6 +1017,22 @@ function addOtros(){
 function delOtros(id){
   if(!S.weeks[CWK])return;
   S.weeks[CWK].otrosEgresoItems=(S.weeks[CWK].otrosEgresoItems||[]).filter(i=>i.id!==id);
+  save();render();
+}
+function addOtrosProy(){
+  const d=document.getElementById('otros-proy-d').value.trim();
+  const a=parseFloat(document.getElementById('otros-proy-a').value);
+  if(!d||!a)return;
+  if(!S.weeks[CWK])S.weeks[CWK]={};
+  if(!S.weeks[CWK].otrosProyItems)S.weeks[CWK].otrosProyItems=[];
+  S.weeks[CWK].otrosProyItems.push({id:uid(),desc:d,amount:a});
+  document.getElementById('otros-proy-d').value='';
+  document.getElementById('otros-proy-a').value='';
+  tgl('otros-proy-form');save();render();
+}
+function delOtrosProy(id){
+  if(!S.weeks[CWK])return;
+  S.weeks[CWK].otrosProyItems=(S.weeks[CWK].otrosProyItems||[]).filter(i=>i.id!==id);
   save();render();
 }
 function addFijosReal(){
