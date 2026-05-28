@@ -1,5 +1,19 @@
 const Airtable = require('airtable');
 
+async function getBody(req) {
+  // req.body may already be parsed (Vercel auto-parse for application/json)
+  if (req.body && typeof req.body === 'object') return req.body;
+  // For sendBeacon (text/plain or application/json as stream)
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => {
+      try { resolve(JSON.parse(data)); }
+      catch(e) { resolve({}); }
+    });
+  });
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -15,10 +29,11 @@ module.exports = async (req, res) => {
       const records = await base(TABLE).select({ maxRecords: 1 }).firstPage();
       if (!records.length) return res.json({ state: null });
       const raw = records[0].fields['data'];
-      res.json({ state: raw ? JSON.parse(raw) : null, id: records[0].id });
+      res.json({ state: raw ? JSON.parse(raw) : null });
 
     } else if (req.method === 'POST') {
-      const { state } = req.body || {};
+      const body = await getBody(req);
+      const { state } = body || {};
       if (!state) return res.status(400).json({ error: 'state required' });
       const data = JSON.stringify(state);
       const records = await base(TABLE).select({ maxRecords: 1 }).firstPage();
