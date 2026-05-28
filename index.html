@@ -169,6 +169,7 @@ body.viewer-mode .admin-only{display:none!important}
   <div id="pin-wrap">
     <input id="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="Ingresa el PIN" autocomplete="off">
     <div id="pin-error"></div>
+    <button class="auth-btn auth-btn-admin" style="margin-top:10px" onclick="submitPin()">Confirmar</button>
   </div>
   <button class="auth-btn auth-btn-admin" id="btn-admin-entry" onclick="showPinInput()">Entrar como Admin</button>
   <button class="auth-btn auth-btn-viewer" onclick="enterViewer()">Ver flujo (solo lectura)</button>
@@ -1440,9 +1441,8 @@ function hidePinInput(){
   document.getElementById('pin-error').textContent='';
   document.getElementById('pin-input').value='';
 }
-document.getElementById('pin-input').addEventListener('keydown',async function(e){
-  if(e.key!=='Enter')return;
-  const pin=this.value;
+async function submitPin(){
+  const pin=document.getElementById('pin-input').value;
   try{
     const r=await fetch('/api/verify-pin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin})});
     const d=await r.json();
@@ -1452,9 +1452,12 @@ document.getElementById('pin-input').addEventListener('keydown',async function(e
       load();render();syncAirtable();
     } else {
       document.getElementById('pin-error').textContent='PIN incorrecto';
-      this.value='';
+      document.getElementById('pin-input').value='';
     }
-  }catch(err){document.getElementById('pin-error').textContent='Error de conexión';}
+  }catch(err){document.getElementById('pin-error').textContent='Error de conexi\u00f3n';}
+}
+document.getElementById('pin-input').addEventListener('keydown',function(e){
+  if(e.key==='Enter')submitPin();
 });
 
 // ==================== AIRTABLE SYNC ====================
