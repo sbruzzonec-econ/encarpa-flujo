@@ -179,7 +179,10 @@ body.viewer-mode .admin-only{display:none!important}
 <!-- SYNC BUTTON -->
 <button id="sync-btn" onclick="syncAirtable()" title="Sincronizar datos">↻</button>
 <div id="sync-status"></div>
-<div id="cloud-ind" style="position:fixed;bottom:16px;left:16px;font-size:18px;z-index:9000;opacity:.85"></div>
+<div style="position:fixed;bottom:12px;left:12px;z-index:9000;display:flex;align-items:center;gap:8px">
+  <button id="sync-cloud-btn" onclick="forceSyncCloud()" style="background:#081342;color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;opacity:.85;box-shadow:0 2px 8px rgba(0,0,0,.25)">☁️ Sincronizar</button>
+  <span id="cloud-ind" style="font-size:12px;color:#444;font-weight:500"></span>
+</div>
 
 <div class="wrap">
 <div class="hdr">
@@ -743,34 +746,95 @@ let S={settings:{tasaM2eq:1009},concepts:[...DC],debts:[...DD],weeks:{}};
 // ==================== STATE SYNC ====================
 const LS_KEY='enc_v3';
 let _saveTimer=null;
+let _pendingCloudSave=false;
+
 function save(){
   S.lastModified=Date.now();
   try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
-  // Debounce cloud save
+  _pendingCloudSave=true;
   clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(async()=>{
-    const ind=document.getElementById('cloud-ind');
-    if(ind){ind.textContent='☁️';ind.title='Guardando en nube...';}
-    try{
-      const r=await fetch('/api/app-state',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({state:S})});
-      if(ind){ind.textContent=r.ok?'✅':'⚠️';ind.title=r.ok?'Guardado en nube':'Error al guardar';}
-      setTimeout(()=>{if(ind)ind.textContent='';},3000);
-    }catch(e){if(ind){ind.textContent='⚠️';ind.title='Sin conexión';}}
-  }, 300);
+  _saveTimer=setTimeout(()=>cloudSave(),300);
 }
+
+async function cloudSave(){
+  clearTimeout(_saveTimer);
+  const ind=document.getElementById('cloud-ind');
+  if(ind)ind.textContent='☁️';
+  try{
+    const r=await fetch('/api/app-state',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({state:S})
+    });
+    if(r.ok){
+      _pendingCloudSave=false;
+      const ts=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+      if(ind){ind.textContent='✅ '+ts;}
+      setTimeout(()=>{if(ind&&!_pendingCloudSave)ind.textContent='';},4000);
+    } else {
+      if(ind)ind.textContent='⚠️ Error';
+    }
+  }catch(e){
+    if(ind)ind.textContent='⚠️ Sin red';
+  }
+}
+
+// Flush immediately when app goes to background (mobile PWA swipe-close)
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'&&_pendingCloudSave){
+    clearTimeout(_saveTimer);
+    // sendBeacon: designed to work even when page is closing
+    const blob=new Blob([JSON.stringify({state:S})],{type:'application/json'});
+    const sent=navigator.sendBeacon('/api/app-state',blob);
+    if(sent)_pendingCloudSave=false;
+    else cloudSave(); // fallback
+  }
+});
+// Also try on pagehide
+window.addEventListener('pagehide',()=>{
+  if(_pendingCloudSave){
+    const blob=new Blob([JSON.stringify({state:S})],{type:'application/json'});
+    navigator.sendBeacon('/api/app-state',blob);
+  }
+});
 async function cloudLoad(){
+  // Don't overwrite if we have local changes not yet saved to cloud
+  if(_pendingCloudSave){
+    console.log('cloudLoad: skipping — pending local changes');
+    return false;
+  }
   try{
     const r=await fetch('/api/app-state');
     if(!r.ok)return false;
     const d=await r.json();
     if(!d.state)return false;
-    // Cloud is always source of truth — no timestamp comparison
-    S={...S,...d.state};
+    const cloudMod=d.state.lastModified||0;
+    const localMod=S.lastModified||0;
+    if(localMod>cloudMod){
+      // Local is newer — push local to cloud instead
+      cloudSave();
+      return false;
+    }
+    // Cloud has newer state — load it
+    S=d.state;
     if(!S.settings)S.settings={tasaM2eq:1009};
     try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+    const ts=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    const el=document.getElementById('cloud-ind');
+    if(el)el.textContent='✅ '+ts;
     return true;
   }catch(e){return false;}
+}
+async function forceSyncCloud(){
+  const el=document.getElementById('sync-cloud-btn');
+  if(el){el.textContent='☁️...';}
+  const updated=await cloudLoad();
+  if(updated){render();syncAirtable();}
+  else{
+    const ei=document.getElementById('cloud-ind');
+    if(ei){ei.textContent='⚠️ Sin datos en nube';setTimeout(()=>{ei.textContent='';},3000);}
+  }
+  if(el){el.textContent='☁️ Sincronizar';}
 }
 function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.parse(r);S={...S,...p};if(!S.settings)S.settings={tasaM2eq:1009};
   // Migración: reordenar deudas con Línea y Tarjeta de Crédito primero
@@ -1642,11 +1706,7 @@ if(_mode){
   load();render();cloudLoad().then(updated=>{if(updated)render();syncAirtable();});
 }
 // Sync on tab/window focus (catches switching devices or tabs)
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&sessionStorage.getItem('enc_mode')){
-    cloudLoad().then(updated=>{if(updated)render();syncAirtable();});
-  }
-});
+// Manual sync only — use the ☁️ Sincronizar button
 </script>
 </body>
 </html>
