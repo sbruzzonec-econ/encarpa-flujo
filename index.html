@@ -753,7 +753,7 @@ function save(){
   try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
   _pendingCloudSave=true;
   clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(()=>cloudSave(),300);
+  _saveTimer=setTimeout(()=>cloudSave(),50);
 }
 
 async function cloudSave(){
@@ -827,15 +827,23 @@ async function cloudLoad(){
 }
 async function forceSyncCloud(){
   const el=document.getElementById('sync-cloud-btn');
-  if(el){el.textContent='☁️...';}
+  if(el)el.textContent='☁️...';
+  // Step 1: push any pending local changes first
+  if(_pendingCloudSave){
+    clearTimeout(_saveTimer);
+    await cloudSave();
+  }
+  // Step 2: pull from cloud (now cloud has our latest)
   const updated=await cloudLoad();
   if(updated){render();syncAirtable();}
-  else{
-    const ei=document.getElementById('cloud-ind');
-    if(ei){ei.textContent='⚠️ Sin datos en nube';setTimeout(()=>{ei.textContent='';},3000);}
-  }
-  if(el){el.textContent='☁️ Sincronizar';}
+  if(el)el.textContent='☁️ Sincronizar';
 }
+// Auto-sync every 15s when tab is visible
+setInterval(()=>{
+  if(document.visibilityState==='visible'&&sessionStorage.getItem('enc_mode')&&!_pendingCloudSave){
+    cloudLoad().then(updated=>{if(updated){render();syncAirtable();}});
+  }
+},15000);
 function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.parse(r);S={...S,...p};if(!S.settings)S.settings={tasaM2eq:1009};
   // Migración: reordenar deudas con Línea y Tarjeta de Crédito primero
   const ORDER=['Línea de Crédito','Tarjeta de Crédito'];
