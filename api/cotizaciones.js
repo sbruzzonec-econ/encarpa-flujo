@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
           'Saldo pendiente',
           'Condición de venta',
           'Fecha instalación',
+          'Inicio evento',
           'Fecha de facturación',
           'Pago a días',
           'Nombre cuenta',
@@ -43,6 +44,7 @@ module.exports = async (req, res) => {
 
       const condicion = (f['Condición de venta'] || '').trim();
       const fechaInstalacion = nd(f['Fecha instalación']);
+      const inicioEvento     = nd(f['Inicio evento']);
       const fechaFacturacion = nd(f['Fecha de facturación']);
       const pagoADias = parseInt(f['Pago a días']) || 0;
 
@@ -51,12 +53,17 @@ module.exports = async (req, res) => {
 
       if (condicion === '% Abono de reserva') {
         if (fechaInstalacion) {
-          // Payment date = installation date - 1 day
+          // Regla principal: fecha instalación − 1 día
           const d = new Date(fechaInstalacion + 'T12:00:00');
           d.setDate(d.getDate() - 1);
           fechaPago = d.toISOString().slice(0, 10);
+        } else if (inicioEvento) {
+          // Regla de respaldo: inicio evento − 2 días (cuando no hay fecha instalación)
+          const d = new Date(inicioEvento + 'T12:00:00');
+          d.setDate(d.getDate() - 2);
+          fechaPago = d.toISOString().slice(0, 10);
         } else {
-          motivo = 'Sin fecha de instalación';
+          motivo = 'Sin fecha de instalación ni inicio de evento';
         }
       } else if (condicion === 'Contra factura') {
         if (fechaFacturacion && pagoADias > 0) {
@@ -80,6 +87,7 @@ module.exports = async (req, res) => {
         monto,
         condicion,
         fechaInstalacion,
+        inicioEvento,
         fechaFacturacion,
         pagoADias,
         desc: nombreCuenta || `Cotización ${r.id}`,
