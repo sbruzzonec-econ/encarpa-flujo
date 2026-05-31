@@ -756,6 +756,11 @@ function save(){
   _saveTimer=setTimeout(()=>cloudSave(),50);
 }
 
+function saveLocalOnly(){
+  // Saves AT-merged data to localStorage WITHOUT updating lastModified or pushing to cloud
+  // This prevents AT sync from overwriting manual changes in the cloud
+  try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+}
 async function cloudSave(){
   clearTimeout(_saveTimer);
   const ind=document.getElementById('cloud-ind');
@@ -862,7 +867,7 @@ function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.pa
         w[f]=w[f].filter(i=>i.source!=='airtable'&&i.source!=='manual-pendiente');
     });
   });
-  save();
+  saveLocalOnly();
 }}catch(e){}}
 
 // ==================== WEEK UTILS ====================
@@ -955,7 +960,7 @@ function render(){
   if(!S.weeks[k])S.weeks[k]={};
   S.weeks[k]._fin=c.saldoFinal;
   S.weeks[k]._finProy=c.projClosing;
-  save();
+  saveLocalOnly(); // computed values — no subir a la nube
 
   const _wd=new Date(k+'T12:00:00'),_ws=new Date(k+'T12:00:00');_ws.setDate(_ws.getDate()+6);
   document.getElementById('wk-a').textContent='Semana del';
