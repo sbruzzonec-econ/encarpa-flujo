@@ -1681,8 +1681,8 @@ function renderPendientes(){
     html+=`<div class="card" style="margin-bottom:8px;padding:12px 14px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
-          <div style="font-size:13px;font-weight:600;color:#081342">${c.condicion||'Sin condición'}</div>
-          <div style="font-size:11px;color:#9aa5b1;margin-top:2px">${c.motivo}</div>
+          <div style="font-size:13px;font-weight:600;color:#081342">${c.desc||c.condicion||'Sin nombre'}</div>
+          <div style="font-size:11px;color:#9aa5b1;margin-top:2px">${c.condicion} · ${c.motivo}</div>
         </div>
         <div style="font-size:15px;font-weight:700;color:#c0392b">$${c.monto.toLocaleString('es-CL')}</div>
       </div>
