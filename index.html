@@ -1321,7 +1321,7 @@ function navW(dir){CWK=shiftKey(CWK,dir);render();}
 // ==================== TABS ====================
 function setTab(name,el){
   document.querySelectorAll('.tbtn').forEach(t=>t.classList.remove('on'));el.classList.add('on');
-  ['flujo','proyeccion','deudas','conceptos'].forEach(t=>document.getElementById('t-'+t).style.display=t===name?'block':'none');
+  ['flujo','proyeccion','deudas','pendientes','conceptos'].forEach(t=>document.getElementById('t-'+t).style.display=t===name?'block':'none');
   if(name==='deudas'||name==='proyeccion')renderDash();
   if(name==='conceptos')renderConceptos();
 }
