@@ -1684,7 +1684,7 @@ function renderPendientes(){
           <div style="font-size:13px;font-weight:600;color:#081342">${c.desc||c.condicion||'Sin nombre'}</div>
           <div style="font-size:11px;color:#9aa5b1;margin-top:2px">${c.condicion} · ${c.motivo}</div>
         </div>
-        <div style="font-size:15px;font-weight:700;color:#c0392b">$${c.monto.toLocaleString('es-CL')}</div>
+        <div style="font-size:15px;font-weight:700;color:#1a7a3c">$${c.monto.toLocaleString('es-CL')}</div>
       </div>
       ${ya?`<div style="font-size:12px;color:#1a7a3c;margin-bottom:6px">✓ Asignado a semana del ${wkLabel(ya.semana)}</div>
         <button class="btn bsm" style="color:#c0392b" onclick="removePendiente('${c.id}')">Quitar asignación</button>`
