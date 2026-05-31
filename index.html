@@ -1385,9 +1385,17 @@ function renderDash(){
   const tb=document.getElementById('proj-tbody');
   let rows='';
   for(let i=-1;i<9;i++){
-    const wk=shiftKey(todayWk,i);const cc2=calcW(wk);const cur=wk===todayWk;
+    const wk=shiftKey(todayWk,i);
+    const _wOrig=getW(wk);
+    const _at=atForWeek(wk);
+    const wMerged={..._wOrig,
+      incomeProy:[...(_wOrig.incomeProy||[]),..._at.ingProy],
+      m2eq:_wOrig.m2eq||_at.m2eq,
+    };
+    const cc2=calcW(wk,wMerged,true);
+    const cur=wk===todayWk;
     const mo=new Date(wk+'T12:00:00');const su=new Date(wk+'T12:00:00');su.setDate(su.getDate()+6);
-    const dateStr=(cur?'→ ':'')+mo.getDate()+'–'+su.getDate()+' '+MES[su.getMonth()];
+    const dateStr=(cur?'\u2192 ':'')+mo.getDate()+'–'+su.getDate()+' '+MES[su.getMonth()];
     rows+=`<tr ${cur?'style="background:#eef3f9;font-weight:600"':''}>
       <td onclick="goWeek('${wk}')" style="${cur?'color:#081342;font-weight:700':''};white-space:nowrap">${dateStr}</td>
       <td style="white-space:nowrap" class="${cc2.ingProy>0?'pos':''}">${clp(cc2.ingProy)}</td>
