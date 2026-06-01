@@ -1376,7 +1376,7 @@ function renderDash(){
         <span style="font-weight:600">${d.name}</span>
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:14px;font-weight:600;color:#081342">${clp(d.total)}</span>
-          ${isViewer()?'':'<button class="btn bsm" style="font-size:11px;padding:3px 8px" onclick="editDebt(''+d.id+'')">editar</button>'}
+          ${isViewer()?'':('<button class="btn bsm" style="font-size:11px;padding:3px 8px" onclick="editDebt(\''+d.id+'\')">editar</button>')}
         </div>
       </div>
       <div id="dbt-edit-${d.id}" style="display:none;margin-bottom:8px;background:#f7f9fc;border-radius:8px;padding:10px">
@@ -1450,29 +1450,33 @@ function periodLbl(c){
   }
 }
 function renderConceptos(){
+  const _vw=isViewer();
   document.getElementById('cfg-tasa').value=S.settings.tasaM2eq||1009;
   [['lc-sueldos',['sueldo_semanal']],['lc-fijos',['imposiciones','gasto_fijo']],['lc-ger',['retiro_familia']],['lc-otros',['otros_egreso']]].forEach(([lid,cats])=>{
     const el=document.getElementById(lid);
     const items=S.concepts.filter(c=>cats.includes(c.cat));
     if(!items.length){el.innerHTML='<div class="empty">Sin conceptos</div>';return;}
-    const _vw=isViewer();
-    el.innerHTML=items.map(c=>`<div class="crow">
-      <span class="ctg" ${_vw?'':"onclick=\"togC('${c.id}')\""} title="${c.active?'Desactivar':'Activar'}" style="${_vw?'cursor:default':''}">${c.active?'✅':'⬜'}</span>
-      <div class="cn" style="${c.active?'':'opacity:.4'}">
-        <div>${c.name}</div>
-        <div class="cnh">${periodLbl(c)}</div>
-      </div>
-      <input type="number" value="${c.amount}" class="cinp" style="${!c.active?'opacity:.4':''}${c.amount===0?';color:#c0392b':''}" ${_vw?'disabled':"onchange=\"updC('${c.id}',+this.value)\""}>
-      ${_vw?'':'<button class="bx" onclick="rmC(''+c.id+'')">×</button>'}
-    </div>`).join('');
+    el.innerHTML=items.map(c=>{
+      const tog=_vw
+        ?`<span class="ctg" style="cursor:default">${c.active?'✅':'⬜'}</span>`
+        :`<span class="ctg" onclick="togC('${c.id}')" title="${c.active?'Desactivar':'Activar'}">${c.active?'✅':'⬜'}</span>`;
+      const inp=_vw
+        ?`<input type="number" value="${c.amount}" class="cinp" disabled style="${!c.active?'opacity:.4':''}${c.amount===0?';color:#c0392b':''}">`
+        :`<input type="number" value="${c.amount}" class="cinp" style="${!c.active?'opacity:.4':''}${c.amount===0?';color:#c0392b':''}" onchange="updC('${c.id}',+this.value)">`;
+      const del=_vw?'':(`<button class="bx" onclick="rmC('${c.id}')">×</button>`);
+      return `<div class="crow">${tog}<div class="cn" style="${c.active?'':'opacity:.4'}"><div>${c.name}</div><div class="cnh">${periodLbl(c)}</div></div>${inp}${del}</div>`;
+    }).join('');
   });
-  const _vw2=isViewer();
-  document.getElementById('lc-deudas').innerHTML=S.debts.map(d=>`<div class="crow">
-    <span class="ctg" ${_vw2?'':"onclick=\"togD('${d.id}')\""} style="${_vw2?'cursor:default':''}">${d.active?'✅':'⬜'}</span>
-    <span class="cn">${d.name}</span>
-    <input type="number" value="${d.total}" class="cinp" ${_vw2?'disabled':"onchange=\"updDebt('${d.id}',+this.value)\""}>
-    ${_vw2?'':'<button class="bx" onclick="rmDebt(''+d.id+'');renderConceptos()">×</button>'}
-  </div>`).join('');
+  document.getElementById('lc-deudas').innerHTML=S.debts.map(d=>{
+    const tog=_vw
+      ?`<span class="ctg" style="cursor:default">${d.active?'✅':'⬜'}</span>`
+      :`<span class="ctg" onclick="togD('${d.id}')">${d.active?'✅':'⬜'}</span>`;
+    const inp=_vw
+      ?`<input type="number" value="${d.total}" class="cinp" disabled>`
+      :`<input type="number" value="${d.total}" class="cinp" onchange="updDebt('${d.id}',+this.value)">`;
+    const del=_vw?'':(`<button class="bx" onclick="rmDebt('${d.id}');renderConceptos()">×</button>`);
+    return `<div class="crow">${tog}<span class="cn">${d.name}</span>${inp}${del}</div>`;
+  }).join('');
 }
 function togC(id){const c=S.concepts.find(x=>x.id===id);if(c){c.active=!c.active;save();render();renderConceptos();}}
 function updC(id,v){const c=S.concepts.find(x=>x.id===id);if(c){c.amount=v;save();render();renderConceptos();}}
