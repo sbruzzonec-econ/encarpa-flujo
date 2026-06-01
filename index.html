@@ -546,11 +546,8 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
       </div>
       <div style="font-size:11px;font-weight:700;color:#9aa5b1;letter-spacing:.05em;margin:14px 0 8px;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="togSec('missed-income-wrap',this)"><span class="chev" style="display:inline;font-size:10px;transition:transform .2s">▶</span> Ingresos proyectados no recibidos esta semana</div>
       <div id="missed-income-wrap" class="cc-det">
-        <div style="display:flex;flex-direction:column;gap:6px;padding:8px 0">
-          <input id="mi-desc" placeholder="Descripción (ej: Abono Claudia Capone)" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;width:100%">
-          <input id="mi-amt" type="number" placeholder="Monto" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;width:100%">
-          <button class="btn bsm" style="background:#081342;color:#fff;align-self:flex-start" onclick="addMissedIncome()">+ Agregar ingreso no recibido</button>
-        </div>
+        <div id="missed-income-picker" style="display:flex;flex-direction:column;gap:4px"></div>
+        <button class="btn bsm" style="margin-top:10px;background:#1a7a3c;color:#fff" onclick="saveMissedIncomeSel()">Agregar seleccionadas</button>
       </div>
       <div id="unpaid-list" style="margin-top:14px"></div>
     </div>
@@ -1234,7 +1231,7 @@ function wkLabel(k){
   return d1.getDate()+' '+months[d1.getMonth()]+' – '+d2.getDate()+' '+months[d2.getMonth()];
 }
 function renderUnpaid(){
-  // Picker: conceptos gerenciales proyectados para CWK
+  // Picker 1: conceptos gerenciales
   const gCs=calcW(CWK).gCs;
   const picker=document.getElementById('unpaid-picker');
   if(picker){
@@ -1246,77 +1243,86 @@ function renderUnpaid(){
       gCs.forEach(c=>{
         const sel=prevSel.has(c.id);
         const row=document.createElement('div');
-        row.dataset.cid=c.id;
-        row.dataset.name=c.name||c.desc||'Concepto';
-        row.dataset.amount=c.amount||0;
+        row.dataset.cid=c.id;row.dataset.name=c.name||c.desc||'Concepto';row.dataset.amount=c.amount||0;
         row.className=sel?'selected':'';
         row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:7px;border:1.5px solid '+(sel?'#081342':'#e0e8f0')+';background:'+(sel?'#eef3f9':'#fff')+';cursor:pointer;transition:all .15s;font-size:13px';
         row.innerHTML='<span style="color:#081342;font-weight:'+(sel?'600':'400')+'">'+(c.name||c.desc||'Concepto')+'</span><span style="color:#c0392b;font-weight:600">'+clp(c.amount||0)+'</span>';
-        row.onclick=function(){
-          const isNowSel=!this.classList.contains('selected');
-          this.classList.toggle('selected',isNowSel);
-          this.style.borderColor=isNowSel?'#081342':'#e0e8f0';
-          this.style.background=isNowSel?'#eef3f9':'#fff';
-          this.querySelector('span').style.fontWeight=isNowSel?'600':'400';
-        };
+        row.onclick=function(){const isNowSel=!this.classList.contains('selected');this.classList.toggle('selected',isNowSel);this.style.borderColor=isNowSel?'#081342':'#e0e8f0';this.style.background=isNowSel?'#eef3f9':'#fff';this.querySelector('span').style.fontWeight=isNowSel?'600':'400';};
         picker.appendChild(row);
       });
     }
   }
-  // Lista acumulada: semanas <= CWK con unpaidGer o missedIncome
+  // Picker 2: ingresos proyectados de la semana actual
+  const miPicker=document.getElementById('missed-income-picker');
+  if(miPicker){
+    const prevSelMI=new Set(Array.from(miPicker.querySelectorAll('[data-miid].selected')).map(el=>el.dataset.miid));
+    miPicker.innerHTML='';
+    // Obtener todos los ingresos proyectados de CWK (AT + manuales), excluyendo los ya pagados
+    const _at=atForWeek(CWK);
+    const _wOrig=getW(CWK);
+    const allProy=[
+      ...(_wOrig.incomeProy||[]).map(i=>({id:i.id||uid(),name:i.desc||i.name||'Ingreso',amount:parseFloat(i.amount)||0})),
+      ..._at.ingProy.filter(i=>i.source!=='pagado').map(i=>({id:i.id||i.desc,name:i.desc||'Ingreso',amount:parseFloat(i.amount)||0})),
+    ].filter(i=>i.amount>0);
+    // Deduplicar por id
+    const seen=new Set();
+    const uniq=allProy.filter(i=>{if(seen.has(i.id))return false;seen.add(i.id);return true;});
+    if(uniq.length===0){
+      miPicker.innerHTML='<div style="font-size:12px;color:#9aa5b1;font-style:italic">No hay ingresos proyectados esta semana</div>';
+    } else {
+      uniq.forEach(item=>{
+        const sel=prevSelMI.has(item.id);
+        const row=document.createElement('div');
+        row.dataset.miid=item.id;row.dataset.name=item.name;row.dataset.amount=item.amount;
+        row.className=sel?'selected':'';
+        row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:7px;border:1.5px solid '+(sel?'#1a7a3c':'#e0e8f0')+';background:'+(sel?'#f0faf4':'#fff')+';cursor:pointer;transition:all .15s;font-size:13px';
+        row.innerHTML='<span style="color:#081342;font-weight:'+(sel?'600':'400')+'">'+item.name+'</span><span style="color:#1a7a3c;font-weight:600">'+clp(item.amount)+'</span>';
+        row.onclick=function(){const isNowSel=!this.classList.contains('selected');this.classList.toggle('selected',isNowSel);this.style.borderColor=isNowSel?'#1a7a3c':'#e0e8f0';this.style.background=isNowSel?'#f0faf4':'#fff';this.querySelector('span').style.fontWeight=isNowSel?'600':'400';};
+        miPicker.appendChild(row);
+      });
+    }
+  }
+  // Lista acumulada
   const list=document.getElementById('unpaid-list');
   if(!list)return;
   const allItems=[];
   Object.keys(S.weeks).sort().forEach(wk=>{
     if(wk>CWK)return;
-    (S.weeks[wk].unpaidGer||[]).forEach(item=>{
-      allItems.push({...item,weekKey:wk,tipo:'ger'});
-    });
-    (S.weeks[wk].missedIncome||[]).forEach(item=>{
-      allItems.push({...item,weekKey:wk,tipo:'ing'});
-    });
+    (S.weeks[wk].unpaidGer||[]).forEach(item=>allItems.push({...item,weekKey:wk,tipo:'ger'}));
+    (S.weeks[wk].missedIncome||[]).forEach(item=>allItems.push({...item,weekKey:wk,tipo:'ing'}));
   });
-  // Subtitle: total count
   const sub=document.getElementById('unpaid-subtitle');
   if(sub)sub.textContent=allItems.length>0?allItems.length+' elemento'+(allItems.length>1?'s':'')+' pendiente'+(allItems.length>1?'s':''):'Sin elementos pendientes';
-  if(allItems.length===0){
-    list.innerHTML='<div style="font-size:12px;color:#9aa5b1;font-style:italic;text-align:center;padding:8px 0">Sin registros acumulados</div>';
-    return;
-  }
-  // Agrupar por semana
+  if(allItems.length===0){list.innerHTML='<div style="font-size:12px;color:#9aa5b1;font-style:italic;text-align:center;padding:8px 0">Sin registros acumulados</div>';return;}
   const byWk={};
-  allItems.forEach(item=>{
-    if(!byWk[item.weekKey])byWk[item.weekKey]=[];
-    byWk[item.weekKey].push(item);
-  });
+  allItems.forEach(item=>{if(!byWk[item.weekKey])byWk[item.weekKey]=[];byWk[item.weekKey].push(item);});
   let html='<div style="font-size:11px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Acumulados</div>';
   Object.keys(byWk).sort().forEach(wk=>{
     html+='<div style="font-size:10px;font-weight:700;color:#9aa5b1;margin:8px 0 4px;text-transform:uppercase">Sem. '+wkLabel(wk)+'</div>';
     byWk[wk].forEach(item=>{
       const esGer=item.tipo==='ger';
-      const badge=esGer
-        ?'<span style="font-size:9px;font-weight:700;background:#e8edf5;color:#5f6b78;padding:1px 5px;border-radius:6px;margin-right:6px">Ger.</span>'
-        :'<span style="font-size:9px;font-weight:700;background:#e8f5e9;color:#1a7a3c;padding:1px 5px;border-radius:6px;margin-right:6px">Ing.</span>';
+      const badge=esGer?'<span style="font-size:9px;font-weight:700;background:#e8edf5;color:#5f6b78;padding:1px 5px;border-radius:6px;margin-right:6px">Ger.</span>':'<span style="font-size:9px;font-weight:700;background:#e8f5e9;color:#1a7a3c;padding:1px 5px;border-radius:6px;margin-right:6px">Ing.</span>';
       const delBtn=isViewer()?'':('<span style="font-size:15px;color:#9aa5b1;cursor:pointer;line-height:1" onclick="'+(esGer?'removeUnpaid':'removeMissedIncome')+'(\''+wk+'\',\''+item.id+'\')">✕</span>');
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:7px;border:1px solid '+(esGer?'#f0e0e0':'#e0f0e8')+';background:'+(esGer?'#fff9f9':'#f9fff9')+';margin-bottom:4px">'
-        +'<span style="font-size:13px;color:#081342">'+badge+item.name+'</span>'
-        +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:13px;color:'+(esGer?'#c0392b':'#1a7a3c')+';font-weight:600">'+clp(item.amount)+'</span>'
-        +delBtn
-        +'</div></div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:7px;border:1px solid '+(esGer?'#f0e0e0':'#e0f0e8')+';background:'+(esGer?'#fff9f9':'#f9fff9')+';margin-bottom:4px"><span style="font-size:13px;color:#081342">'+badge+item.name+'</span><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;color:'+(esGer?'#c0392b':'#1a7a3c')+';font-weight:600">'+clp(item.amount)+'</span>'+delBtn+'</div></div>';
     });
   });
   list.innerHTML=html;
 }
-function addMissedIncome(){
-  const desc=document.getElementById('mi-desc').value.trim();
-  const amt=parseFloat(document.getElementById('mi-amt').value)||0;
-  if(!desc||!amt)return;
+function saveMissedIncomeSel(){
+  const miPicker=document.getElementById('missed-income-picker');
+  if(!miPicker)return;
+  const sel=miPicker.querySelectorAll('[data-miid].selected');
+  if(!sel.length)return;
   if(!S.weeks[CWK])S.weeks[CWK]={};
   if(!S.weeks[CWK].missedIncome)S.weeks[CWK].missedIncome=[];
-  S.weeks[CWK].missedIncome.push({id:uid(),name:desc,amount:amt});
-  document.getElementById('mi-desc').value='';
-  document.getElementById('mi-amt').value='';
+  const existing=new Set(S.weeks[CWK].missedIncome.map(i=>i.sourceId));
+  sel.forEach(el=>{
+    const srcId=el.dataset.miid;
+    if(existing.has(srcId))return;
+    S.weeks[CWK].missedIncome.push({id:uid(),sourceId:srcId,name:el.dataset.name,amount:parseFloat(el.dataset.amount)||0});
+    el.classList.remove('selected');
+    el.style.borderColor='#e0e8f0';el.style.background='#fff';el.querySelector('span').style.fontWeight='400';
+  });
   save();renderUnpaid();
 }
 function removeMissedIncome(weekKey,itemId){
