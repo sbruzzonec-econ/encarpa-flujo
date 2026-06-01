@@ -1,13 +1,31 @@
 const Airtable = require('airtable');
 
-// Normalize Airtable date to YYYY-MM-DD
 function nd(d){ return d ? d.toString().slice(0,10) : ''; }
 
-// Add N calendar days to a date (días corridos, no hábiles)
 function addCalendarDays(dateStr, days) {
   const d = new Date(dateStr + 'T12:00:00');
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+// Calculates fechaPago for a record (returns null if can't be determined)
+function calcFechaPago(condicion, fechaInstalacion, inicioEvento, fechaFacturacion, pagoADias) {
+  if (condicion === '% Abono de reserva') {
+    if (fechaInstalacion) {
+      const d = new Date(fechaInstalacion + 'T12:00:00');
+      d.setDate(d.getDate() - 1);
+      return d.toISOString().slice(0, 10);
+    } else if (inicioEvento) {
+      const d = new Date(inicioEvento + 'T12:00:00');
+      d.setDate(d.getDate() - 2);
+      return d.toISOString().slice(0, 10);
+    }
+  } else if (condicion === 'Contra factura') {
+    if (fechaFacturacion && pagoADias > 0) {
+      return addCalendarDays(fechaFacturacion, pagoADias);
+    }
+  }
+  return null;
 }
 
 module.exports = async (req, res) => {
@@ -34,55 +52,26 @@ module.exports = async (req, res) => {
       })
       .all();
 
-    const conFecha = [];   // quotes with determinable payment date
-    const sinFecha = [];   // quotes needing manual date assignment
+    const conFecha = [];
+    const sinFecha = [];
+    const pagadas  = []; // saldo pendiente = 0 pero tenían fecha calculable
 
     for (const r of records) {
       const f = r.fields;
       const monto = parseFloat(f['Saldo pendiente']) || 0;
-      if (monto <= 0) continue;
 
-      const condicion = (f['Condición de venta'] || '').trim();
+      const condicion       = (f['Condición de venta'] || '').trim();
       const fechaInstalacion = nd(f['Fecha instalación']);
-      const inicioEvento     = nd(f['Inicio evento']);
+      const inicioEvento    = nd(f['Inicio evento']);
       const fechaFacturacion = nd(f['Fecha de facturación']);
-      const pagoADias = parseInt(f['Pago a días']) || 0;
-
-      let fechaPago = null;
-      let motivo = '';
-
-      if (condicion === '% Abono de reserva') {
-        if (fechaInstalacion) {
-          // Regla principal: fecha instalación − 1 día
-          const d = new Date(fechaInstalacion + 'T12:00:00');
-          d.setDate(d.getDate() - 1);
-          fechaPago = d.toISOString().slice(0, 10);
-        } else if (inicioEvento) {
-          // Regla de respaldo: inicio evento − 2 días (cuando no hay fecha instalación)
-          const d = new Date(inicioEvento + 'T12:00:00');
-          d.setDate(d.getDate() - 2);
-          fechaPago = d.toISOString().slice(0, 10);
-        } else {
-          motivo = 'Campos faltantes: Fecha instalación e Inicio evento';
-        }
-      } else if (condicion === 'Contra factura') {
-        if (fechaFacturacion && pagoADias > 0) {
-          fechaPago = addCalendarDays(fechaFacturacion, pagoADias);
-        } else if (!fechaFacturacion) {
-          motivo = 'Campo faltante: Fecha de facturación';
-        } else if (!pagoADias) {
-          motivo = 'Campo faltante: Pago a días';
-        }
-      } else {
-        motivo = `Condición de venta desconocida: "${condicion}"  — revisa Airtable`;
-      }
+      const pagoADias       = parseInt(f['Pago a días']) || 0;
 
       const nombreCuenta = Array.isArray(f['Nombre cuenta'])
         ? (f['Nombre cuenta'][0] || '').toString().trim()
         : (f['Nombre cuenta'] || '').toString().trim();
       const idCot = f['ID'] || r.id;
 
-      const entry = {
+      const baseEntry = {
         id: r.id,
         monto,
         condicion,
@@ -94,14 +83,38 @@ module.exports = async (req, res) => {
         idCot,
       };
 
+      // Cotización pagada en su totalidad (saldo = 0)
+      if (monto <= 0) {
+        const fechaPago = calcFechaPago(condicion, fechaInstalacion, inicioEvento, fechaFacturacion, pagoADias);
+        if (fechaPago) {
+          // Incluir en pagadas — el frontend recuperará el monto desde su caché
+          pagadas.push({ ...baseEntry, fechaPago });
+        }
+        continue;
+      }
+
+      // Cotización con saldo pendiente > 0
+      const fechaPago = calcFechaPago(condicion, fechaInstalacion, inicioEvento, fechaFacturacion, pagoADias);
+      let motivo = '';
+
+      if (!fechaPago) {
+        if (condicion === '% Abono de reserva') {
+          motivo = 'Campos faltantes: Fecha instalación e Inicio evento';
+        } else if (condicion === 'Contra factura') {
+          motivo = !fechaFacturacion ? 'Campo faltante: Fecha de facturación' : 'Campo faltante: Pago a días';
+        } else {
+          motivo = `Condición de venta desconocida: "${condicion}" — revisa Airtable`;
+        }
+      }
+
       if (fechaPago) {
-        conFecha.push({ ...entry, fechaPago });
+        conFecha.push({ ...baseEntry, fechaPago });
       } else {
-        sinFecha.push({ ...entry, motivo });
+        sinFecha.push({ ...baseEntry, motivo });
       }
     }
 
-    res.json({ conFecha, sinFecha });
+    res.json({ conFecha, sinFecha, pagadas });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
