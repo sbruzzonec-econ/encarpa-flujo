@@ -1690,7 +1690,7 @@ function renderPendientes(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
           <div style="font-size:13px;font-weight:600;color:#081342">${c.desc||c.condicion||'Sin nombre'}</div>
-          <div style="font-size:11px;color:#9aa5b1;margin-top:2px">${c.condicion} · ${c.motivo}</div>
+          <div style="font-size:11px;color:#9aa5b1;margin-top:2px">${c.condicion}</div><div style="display:inline-block;margin-top:5px;background:#fff3e0;color:#b45309;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid #fbbf24">⚠ ${c.motivo}</div>
         </div>
         <div style="font-size:15px;font-weight:700;color:#1a7a3c">$${c.monto.toLocaleString('es-CL')}</div>
       </div>
