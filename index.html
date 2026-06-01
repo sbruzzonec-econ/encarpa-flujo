@@ -879,7 +879,7 @@ function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.pa
     const w=S.weeks[k];if(!w)return;
     AT_FIELDS.forEach(f=>{
       if(Array.isArray(w[f]))
-        w[f]=w[f].filter(i=>i.source!=='airtable'&&i.source!=='manual-pendiente');
+        w[f]=w[f].filter(i=>i.source!=='airtable'&&i.source!=='manual-pendiente'&&i.source!=='pagado');
     });
   });
   saveLocalOnly();
@@ -1107,7 +1107,13 @@ function render(){
 function rInc(lid,items,field,bcls,label){
   const el=document.getElementById(lid);
   if(!items||!items.length){el.innerHTML='<div class="empty">Sin registros</div>';return;}
-  el.innerHTML=items.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600" class="${bcls==='bg'?'pos':'pos-dim'}">${clp(parseFloat(i.amount))}</span><button class="bx" onclick="delItem('${field}','${i.id}')">×</button></div></div>`).join('');
+  el.innerHTML=items.map(i=>{
+    const isPagado=i.source==='pagado';
+    const isAT=i.source==='airtable'||i.source==='manual-pendiente'||isPagado;
+    const badge=isPagado?'<span style="font-size:10px;font-weight:700;color:#1a7a3c;margin-left:4px">✓ cobrado</span>':'';
+    const del=isAT||isViewer()?'':(`<button class="bx" onclick="delItem('${field}','${i.id}')">×</button>`);
+    return`<div class="row" style="${isPagado?'opacity:.45':''}"><span>${i.desc}${badge}</span><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600" class="${bcls==='bg'?'pos':'pos-dim'}">${clp(parseFloat(i.amount))}</span>${del}</div></div>`;
+  }).join('');
 }
 
 function rGerReal(w,c){
@@ -1646,6 +1652,17 @@ async function syncAirtable(){
     // Cotizaciones
     AT.cotConFecha=cotR.conFecha||[];
     AT.cotSinFecha=cotR.sinFecha||[];
+    // Actualizar caché con últimos montos conocidos (solo cuando monto > 0)
+    if(!S.cotCache)S.cotCache={};
+    AT.cotConFecha.forEach(c=>{
+      if(c.monto>0) S.cotCache[c.id]={monto:c.monto,fechaPago:c.fechaPago,desc:c.desc};
+    });
+    // Cotizaciones pagadas (saldo=0): recuperar último monto desde caché
+    AT.cotPagadas=(cotR.pagadas||[]).map(c=>{
+      const cached=S.cotCache&&S.cotCache[c.id];
+      if(!cached)return null;
+      return{...c,monto:cached.monto,desc:cached.desc,pagado:true};
+    }).filter(Boolean);
     // Si una cotización ahora tiene fecha calculable en Airtable,
     // eliminar su asignación manual para evitar doble conteo
     if(S.pendientes&&S.pendientes.length){
@@ -1677,12 +1694,16 @@ function atForWeek(key){
   const ingProy=AT.cotConFecha
     .filter(c=>{const d=new Date(c.fechaPago+'T12:00:00');return d>=d0&&d<d1;})
     .map(c=>({desc:c.desc||`Cotización ${c.id}`,amount:c.monto,source:'airtable'}));
+  // Cotizaciones ya cobradas en su totalidad (saldo=0) — mostrar opacas
+  const ingPagadas=(AT.cotPagadas||[])
+    .filter(c=>{const d=new Date(c.fechaPago+'T12:00:00');return d>=d0&&d<d1;})
+    .map(c=>({desc:c.desc||`Cotización ${c.id}`,amount:c.monto,source:'pagado'}));
   // Manual pending assigned to this week
   const manualPend=(S.pendientes||[])
     .filter(p=>p.semana===key)
     .map(p=>({desc:p.desc,amount:p.monto,source:'manual-pendiente'}));
   return{
-    ingProy:[...ingProy,...manualPend],
+    ingProy:[...ingProy,...ingPagadas,...manualPend],
     ingReal:inWeek(AT.ingresos),
     varReal:inWeek(AT.variables),
     fijosReal:inWeek(AT.fijos),
