@@ -1625,6 +1625,14 @@ async function syncAirtable(){
     // Cotizaciones
     AT.cotConFecha=cotR.conFecha||[];
     AT.cotSinFecha=cotR.sinFecha||[];
+    // Si una cotización ahora tiene fecha calculable en Airtable,
+    // eliminar su asignación manual para evitar doble conteo
+    if(S.pendientes&&S.pendientes.length){
+      const conFechaIds=new Set(AT.cotConFecha.map(c=>c.id));
+      const antes=S.pendientes.length;
+      S.pendientes=S.pendientes.filter(p=>!conFechaIds.has(p.cotId));
+      if(S.pendientes.length<antes)save(); // solo guardar si hubo cambios
+    }
     // Store pending in localStorage if not already assigned
     if(!S.pendientes)S.pendientes=[];
     renderPendientes();
