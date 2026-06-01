@@ -529,23 +529,29 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
     </div>
   </div>
 
-  <!-- Card No pagadas del sueldo gerencial -->
+  <!-- Card No realizados de la semana -->
   <div class="card" id="unpaid-card">
     <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="togSec('unpaid-body',this);renderUnpaid()">
       <div>
-        <div style="font-size:14px;font-weight:600;color:#081342">No pagadas del sueldo gerencial</div>
+        <div style="font-size:14px;font-weight:600;color:#081342">No realizados de la semana</div>
         <div style="font-size:11px;color:#9aa5b1;margin-top:2px" id="unpaid-subtitle">Toca para gestionar</div>
       </div>
       <span class="chev" style="display:inline;font-size:12px;color:#9aa5b1;transition:transform .2s">▶</span>
     </div>
     <div id="unpaid-body" class="cc-det" style="margin-top:12px;border-top:none">
-      <!-- Selector de conceptos -->
-      <div style="font-size:11px;font-weight:700;color:#9aa5b1;letter-spacing:.05em;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="togSec('unpaid-picker-wrap',this)"><span class="chev" style="display:inline;font-size:10px;transition:transform .2s">▶</span> Selecciona conceptos no pagados esta semana</div>
+      <div style="font-size:11px;font-weight:700;color:#9aa5b1;letter-spacing:.05em;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="togSec('unpaid-picker-wrap',this)"><span class="chev" style="display:inline;font-size:10px;transition:transform .2s">▶</span> Sueldo gerencial no pagado esta semana</div>
       <div id="unpaid-picker-wrap" class="cc-det">
         <div id="unpaid-picker" style="display:flex;flex-direction:column;gap:4px"></div>
         <button class="btn bsm" style="margin-top:10px;background:#081342;color:#fff" onclick="saveUnpaidSel()">Agregar seleccionadas</button>
       </div>
-      <!-- Lista acumulada -->
+      <div style="font-size:11px;font-weight:700;color:#9aa5b1;letter-spacing:.05em;margin:14px 0 8px;cursor:pointer;display:flex;align-items:center;gap:6px" onclick="togSec('missed-income-wrap',this)"><span class="chev" style="display:inline;font-size:10px;transition:transform .2s">▶</span> Ingresos proyectados no recibidos esta semana</div>
+      <div id="missed-income-wrap" class="cc-det">
+        <div style="display:flex;flex-direction:column;gap:6px;padding:8px 0">
+          <input id="mi-desc" placeholder="Descripción (ej: Abono Claudia Capone)" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;width:100%">
+          <input id="mi-amt" type="number" placeholder="Monto" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;width:100%">
+          <button class="btn bsm" style="background:#081342;color:#fff;align-self:flex-start" onclick="addMissedIncome()">+ Agregar ingreso no recibido</button>
+        </div>
+      </div>
       <div id="unpaid-list" style="margin-top:14px"></div>
     </div>
   </div>
@@ -1232,7 +1238,6 @@ function renderUnpaid(){
   const gCs=calcW(CWK).gCs;
   const picker=document.getElementById('unpaid-picker');
   if(picker){
-    // Preservar selección actual
     const prevSel=new Set(Array.from(picker.querySelectorAll('[data-cid].selected')).map(el=>el.dataset.cid));
     picker.innerHTML='';
     if(gCs.length===0){
@@ -1258,22 +1263,24 @@ function renderUnpaid(){
       });
     }
   }
-  // Lista acumulada: todas las semanas <= CWK que tienen unpaidGer
+  // Lista acumulada: semanas <= CWK con unpaidGer o missedIncome
   const list=document.getElementById('unpaid-list');
   if(!list)return;
-  // Recoger todos los items de semanas ≤ CWK
   const allItems=[];
   Object.keys(S.weeks).sort().forEach(wk=>{
     if(wk>CWK)return;
     (S.weeks[wk].unpaidGer||[]).forEach(item=>{
-      allItems.push({...item,weekKey:wk});
+      allItems.push({...item,weekKey:wk,tipo:'ger'});
+    });
+    (S.weeks[wk].missedIncome||[]).forEach(item=>{
+      allItems.push({...item,weekKey:wk,tipo:'ing'});
     });
   });
-  // Subtitle
+  // Subtitle: total count
   const sub=document.getElementById('unpaid-subtitle');
-  if(sub)sub.textContent=allItems.length>0?allItems.length+' concepto'+(allItems.length>1?'s':'')+' pendiente'+(allItems.length>1?'s':''):'Sin conceptos pendientes';
+  if(sub)sub.textContent=allItems.length>0?allItems.length+' elemento'+(allItems.length>1?'s':'')+' pendiente'+(allItems.length>1?'s':''):'Sin elementos pendientes';
   if(allItems.length===0){
-    list.innerHTML='<div style="font-size:12px;color:#9aa5b1;font-style:italic;text-align:center;padding:8px 0">Sin conceptos no pagados acumulados</div>';
+    list.innerHTML='<div style="font-size:12px;color:#9aa5b1;font-style:italic;text-align:center;padding:8px 0">Sin registros acumulados</div>';
     return;
   }
   // Agrupar por semana
@@ -1282,19 +1289,40 @@ function renderUnpaid(){
     if(!byWk[item.weekKey])byWk[item.weekKey]=[];
     byWk[item.weekKey].push(item);
   });
-  let html='<div style="font-size:11px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Pendientes acumulados</div>';
+  let html='<div style="font-size:11px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Acumulados</div>';
   Object.keys(byWk).sort().forEach(wk=>{
     html+='<div style="font-size:10px;font-weight:700;color:#9aa5b1;margin:8px 0 4px;text-transform:uppercase">Sem. '+wkLabel(wk)+'</div>';
     byWk[wk].forEach(item=>{
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:7px;border:1px solid #f0e0e0;background:#fff9f9;margin-bottom:4px">'
-        +'<span style="font-size:13px;color:#081342">'+item.name+'</span>'
+      const esGer=item.tipo==='ger';
+      const badge=esGer
+        ?'<span style="font-size:9px;font-weight:700;background:#e8edf5;color:#5f6b78;padding:1px 5px;border-radius:6px;margin-right:6px">Ger.</span>'
+        :'<span style="font-size:9px;font-weight:700;background:#e8f5e9;color:#1a7a3c;padding:1px 5px;border-radius:6px;margin-right:6px">Ing.</span>';
+      const delBtn=isViewer()?'':('<span style="font-size:15px;color:#9aa5b1;cursor:pointer;line-height:1" onclick="'+(esGer?'removeUnpaid':'removeMissedIncome')+'(\''+wk+'\',\''+item.id+'\')">✕</span>');
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:7px;border:1px solid '+(esGer?'#f0e0e0':'#e0f0e8')+';background:'+(esGer?'#fff9f9':'#f9fff9')+';margin-bottom:4px">'
+        +'<span style="font-size:13px;color:#081342">'+badge+item.name+'</span>'
         +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:13px;color:#c0392b;font-weight:600">'+clp(item.amount)+'</span>'
-        +(isViewer()?'':'<span style="font-size:16px;color:#9aa5b1;cursor:pointer;line-height:1" onclick="removeUnpaid(\''+wk+'\',\''+item.id+'\')">✕</span>')
+        +'<span style="font-size:13px;color:'+(esGer?'#c0392b':'#1a7a3c')+';font-weight:600">'+clp(item.amount)+'</span>'
+        +delBtn
         +'</div></div>';
     });
   });
   list.innerHTML=html;
+}
+function addMissedIncome(){
+  const desc=document.getElementById('mi-desc').value.trim();
+  const amt=parseFloat(document.getElementById('mi-amt').value)||0;
+  if(!desc||!amt)return;
+  if(!S.weeks[CWK])S.weeks[CWK]={};
+  if(!S.weeks[CWK].missedIncome)S.weeks[CWK].missedIncome=[];
+  S.weeks[CWK].missedIncome.push({id:uid(),name:desc,amount:amt});
+  document.getElementById('mi-desc').value='';
+  document.getElementById('mi-amt').value='';
+  save();renderUnpaid();
+}
+function removeMissedIncome(weekKey,itemId){
+  if(!S.weeks[weekKey])return;
+  S.weeks[weekKey].missedIncome=(S.weeks[weekKey].missedIncome||[]).filter(i=>i.id!==itemId);
+  save();renderUnpaid();
 }
 function saveUnpaidSel(){
   const picker=document.getElementById('unpaid-picker');
