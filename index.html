@@ -1098,7 +1098,9 @@ function render(){
   }
 
   // Amortizaciones card
-  document.getElementById('h-amort-r').textContent=clp(c.amort);
+  const amortEl=document.getElementById('h-amort-r');
+  if(c.amort>0){amortEl.textContent=clp(c.amort);amortEl.style.color='';}
+  else{amortEl.textContent='—';amortEl.style.color='#9aa5b1';}
   const debtSel=document.getElementById('amort-debt');
   const activeDebts=S.debts.filter(d=>d.active&&d.total>0);
   debtSel.innerHTML=activeDebts.length?activeDebts.map(d=>`<option value="${d.id}">${d.name}</option>`).join(''):'<option value="">Sin deudas registradas</option>';
