@@ -63,18 +63,18 @@ module.exports = async (req, res) => {
           d.setDate(d.getDate() - 2);
           fechaPago = d.toISOString().slice(0, 10);
         } else {
-          motivo = 'Sin fecha de instalación ni inicio de evento';
+          motivo = 'Campos faltantes: Fecha instalación e Inicio evento';
         }
       } else if (condicion === 'Contra factura') {
         if (fechaFacturacion && pagoADias > 0) {
           fechaPago = addCalendarDays(fechaFacturacion, pagoADias);
         } else if (!fechaFacturacion) {
-          motivo = 'Sin fecha de facturación';
+          motivo = 'Campo faltante: Fecha de facturación';
         } else if (!pagoADias) {
-          motivo = 'Sin "Pago a días"';
+          motivo = 'Campo faltante: Pago a días';
         }
       } else {
-        motivo = `Condición desconocida: ${condicion}`;
+        motivo = `Condición de venta desconocida: "${condicion}"  — revisa Airtable`;
       }
 
       const nombreCuenta = Array.isArray(f['Nombre cuenta'])
