@@ -21,7 +21,7 @@ function calcFechaPago(condicion, fechaInstalacion, inicioEvento, fechaFacturaci
       return d.toISOString().slice(0, 10);
     }
   } else if (condicion === 'Contra factura') {
-    if (fechaFacturacion && pagoADias > 0) {
+    if (fechaFacturacion && pagoADias !== null && !isNaN(pagoADias)) {
       return addCalendarDays(fechaFacturacion, pagoADias);
     }
   }
@@ -64,7 +64,8 @@ module.exports = async (req, res) => {
       const fechaInstalacion = nd(f['Fecha instalación']);
       const inicioEvento    = nd(f['Inicio evento']);
       const fechaFacturacion = nd(f['Fecha de facturación']);
-      const pagoADias       = parseInt(f['Pago a días']) || 0;
+      const _pagoRaw        = f['Pago a días'];
+      const pagoADias       = (_pagoRaw !== undefined && _pagoRaw !== null && _pagoRaw !== '') ? parseInt(_pagoRaw) : null;
 
       const nombreCuenta = Array.isArray(f['Nombre cuenta'])
         ? (f['Nombre cuenta'][0] || '').toString().trim()
