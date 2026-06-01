@@ -1038,8 +1038,8 @@ function render(){
   document.getElementById('tasa-lbl').textContent=(c.tasa).toLocaleString('es-CL');
   // Otros egresos
   const hOtrosP=document.getElementById('h-otros-p');
-  hOtrosP.textContent=c.otrosProy>0?clp(c.otrosProy):'—';
-  hOtrosP.style.color=c.otrosProy>0?'':'#9aa5b1';
+  hOtrosP.textContent=clp(c.otrosProy);
+  hOtrosP.style.color='';
   document.getElementById('h-otros-r').textContent=clp(c.otrosReal);
   const otrosSelEl=document.getElementById('otros-concept');
   const otrosCs=S.concepts.filter(x=>x.cat==='otros_egreso'&&x.active);
