@@ -162,6 +162,8 @@ body.viewer-mode #f-open{pointer-events:none;background:transparent;border:none;
 body.viewer-mode #unpaid-body .btn{display:none!important}
 body.viewer-mode #unpaid-body input[type="checkbox"]{pointer-events:none;opacity:.5}
 body.viewer-mode #unpaid-picker-wrap{display:none!important}
+body.viewer-mode #missed-income-wrap{display:none!important}
+body.viewer-mode #unpaid-body>div[onclick*="missed-income-wrap"]{display:none!important}
 body.viewer-mode #t-conceptos .btn:not(.nav){display:none!important}
 body.viewer-mode #t-conceptos input:not([type="hidden"]){pointer-events:none;opacity:.7}
 body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
@@ -318,7 +320,7 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
         </div>
         <div class="cc-det" id="det-var">
           <div class="g2" style="margin-top:8px">
-            <div class="ic">
+            <div class="ic admin-only">
               <div class="ml">Proyectado — m²eq × $<span id="tasa-lbl">1.009</span></div>
               <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px">
                 <label style="font-size:12px;color:#6b7a8d;white-space:nowrap">m²eq:</label>
