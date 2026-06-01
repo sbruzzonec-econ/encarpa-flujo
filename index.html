@@ -152,6 +152,15 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .auth-back{background:none;border:none;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer;margin-top:8px}
 /* VIEWER / ADMIN MODE */
 body.viewer-mode .admin-only{display:none!important}
+body.viewer-mode .aform{display:none!important}
+body.viewer-mode .add-inline{display:none!important}
+body.viewer-mode button.bx{display:none!important}
+body.viewer-mode .slbl>button{display:none!important}
+body.viewer-mode .slbl>button.add-inline{display:none!important}
+body.viewer-mode .btns{display:none!important}
+body.viewer-mode #f-open{pointer-events:none;background:transparent;border:none;cursor:default}
+body.viewer-mode #unpaid-body .btn{display:none!important}
+body.viewer-mode #unpaid-body input[type="checkbox"]{pointer-events:none;opacity:.5}
 /* SYNC BUTTON */
 #sync-btn{position:fixed;bottom:16px;right:16px;background:#081342;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:100;display:flex;align-items:center;justify-content:center}
 #sync-btn.spinning{animation:spin .8s linear infinite}
@@ -234,8 +243,8 @@ body.viewer-mode .admin-only{display:none!important}
     </div>
     <div class="acc-det" id="det-ing" style="border-top:1px solid #f7f9fb;padding:0 16px 12px">
       <div class="btns" style="margin-top:10px;display:none">
-        <button class="btn bsm" onclick="tgl('aip');event.stopPropagation()">+ Proyectado</button>
-        <button class="btn bsm btnp" onclick="tgl('air');event.stopPropagation()">+ Real</button>
+        <button class="btn bsm admin-only" onclick="tgl('aip');event.stopPropagation()">+ Proyectado</button>
+        <button class="btn bsm btnp admin-only" onclick="tgl('air');event.stopPropagation()">+ Real</button>
       </div>
       <div class="aform" id="aip" style="display:none">
         <div class="hint">Ingreso esperado de cotización aprobada (saldo pendiente con vencimiento esta semana).</div>
@@ -279,7 +288,7 @@ body.viewer-mode .admin-only{display:none!important}
         </div>
         <div class="cc-det" id="det-fij">
           <div class="btns" style="margin-top:8px;display:none">
-            <button class="btn bsm btnp" onclick="tgl('afij');event.stopPropagation()">+ Real</button>
+            <button class="btn bsm btnp admin-only" onclick="tgl('afij');event.stopPropagation()">+ Real</button>
           </div>
           <div class="aform" id="afij" style="display:none">
             <div class="hint">Pago fijo efectuado esta semana (sueldo, imposición, arriendo, etc.).</div>
@@ -316,7 +325,7 @@ body.viewer-mode .admin-only{display:none!important}
             <div>
               <div class="slbl">Real <button class="add-inline add-inline-real" onclick="tgl('avr');event.stopPropagation()">+</button></div>
               <div class="btns" style="margin-bottom:8px;display:none">
-                <button class="btn bsm btnp" onclick="tgl('avr');event.stopPropagation()">+ Real</button>
+                <button class="btn bsm btnp admin-only" onclick="tgl('avr');event.stopPropagation()">+ Real</button>
               </div>
               <div class="aform" id="avr" style="display:none">
                 <input id="avr-d" placeholder="Descripción">
@@ -389,7 +398,7 @@ body.viewer-mode .admin-only{display:none!important}
         </div>
         <div class="cc-det" id="det-ger">
           <div class="btns" style="margin-top:8px;display:none">
-            <button class="btn bsm btnp" onclick="tgl('agr');event.stopPropagation()">+ Real</button>
+            <button class="btn bsm btnp admin-only" onclick="tgl('agr');event.stopPropagation()">+ Real</button>
           </div>
           <div class="aform" id="agr" style="display:none">
             <div class="hint">Pago de retiro familia efectuado esta semana (categoría "Retiro socios" en Airtable).</div>
@@ -562,7 +571,7 @@ body.viewer-mode .admin-only{display:none!important}
     </div>
   </div>
   <div class="card">
-    <div style="font-size:14px;font-weight:600;color:#081342;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">Estado de deudas <button class="btn bsm" onclick="tgl('add-dbt')">+ Deuda</button></div>
+    <div style="font-size:14px;font-weight:600;color:#081342;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">Estado de deudas <button class="btn bsm admin-only" onclick="tgl('add-dbt')">+ Deuda</button></div>
     <div class="aform" id="add-dbt" style="display:none">
       <input id="dbt-n" placeholder="Nombre de la deuda">
       <input id="dbt-t" type="number" placeholder="Monto total adeudado">
@@ -749,6 +758,7 @@ let _saveTimer=null;
 let _pendingCloudSave=false;
 
 function save(){
+  if(sessionStorage.getItem('enc_mode')==='viewer')return; // modo invitado: sin cambios
   S.lastModified=Date.now();
   try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
   _pendingCloudSave=true;
