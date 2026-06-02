@@ -98,8 +98,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f3f7;color:#1a
 .bar{height:16px;background:#eef1f5;border-radius:99px;overflow:hidden;margin-top:3px}
 .barf{height:100%;border-radius:99px;transition:width .4s;background:linear-gradient(90deg,#2ecc71,#1a7a3c)}
 #flow-card.hide-proy .acc-col:not(.real-col){display:none!important}
+#flow-card.hide-proy #proy-col-hdr{display:flex!important;min-width:0;width:auto;padding:0}
+#flow-card.hide-proy #proy-col-lbl{display:none!important}
 #flow-card.hide-proy #proy-toggle-btn{display:inline!important}
-#flow-card.hide-proy #proy-col-hdr{display:flex!important;opacity:.5;min-width:0;width:auto}
 #flow-card.hide-proy .cc-sum:not(.real-sum){display:none!important}
 #flow-card.hide-proy .g2>div:first-child{display:none!important}
 #flow-card.hide-proy .slbl .add-inline:not(.add-inline-real){display:none!important}
@@ -240,7 +241,7 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
       <div style="width:0"></div>
       <div style="flex:1"></div>
       <div class="acc-vals">
-        <div class="acc-col" id="proy-col-hdr"><div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><span style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em">Proyectado</span><button id="proy-toggle-btn" onclick="toggleProyCol()" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0;line-height:1;display:inline!important">◀</button></div></div>
+        <div class="acc-col" id="proy-col-hdr"><div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><span id="proy-col-lbl" style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em">Proyectado</span><button id="proy-toggle-btn" onclick="toggleProyCol()" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0;line-height:1;display:inline!important">◀</button></div></div>
         <div class="acc-col real-col"><div style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em;text-align:right">Real</div></div>
       </div>
     </div>
