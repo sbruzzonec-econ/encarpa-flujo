@@ -1529,6 +1529,7 @@ function renderDash(){
       </div>`;
   }
 }
+function goWeek(k){CWK=k;setTab('flujo',document.querySelector('.tbtn'));render();}
 function toggleProyCol(){
   const card=document.getElementById('flow-card');
   const hidden=card.classList.toggle('hide-proy');
