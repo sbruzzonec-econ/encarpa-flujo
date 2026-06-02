@@ -1498,23 +1498,25 @@ function renderDash(){
       const totalH=Math.round(d.total/maxTotal*chartH);
       const amortH=Math.round(dAmort/d.total*totalH);
       const balH=totalH-amortH;
-      const shortName=d.name.length>14?d.name.slice(0,13)+'…':d.name;
-      return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;gap:4px">
-        <div style="display:flex;flex-direction:column;justify-content:flex-end;height:${chartH}px;width:100%;max-width:60px;position:relative">
-          <div style="display:flex;flex-direction:column;width:100%;border-radius:6px 6px 0 0;overflow:hidden">
-            ${balH>0?`<div style="height:${balH}px;background:#eef1f5;border:1px solid #dde6f0;border-bottom:none"></div>`:''}
-            ${amortH>0?`<div style="height:${amortH}px;background:linear-gradient(180deg,#2ecc71,#1a7a3c)"></div>`:''}
-          </div>
-          <span style="position:absolute;bottom:${totalH+3}px;left:0;right:0;text-align:center;font-size:10px;font-weight:600;color:#5f6b78;white-space:nowrap">${clp(dBal)}</span>
+      return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative">
+        <span style="position:absolute;bottom:${totalH+4}px;left:0;right:0;text-align:center;font-size:10px;font-weight:600;color:#5f6b78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${clp(dBal)}</span>
+        <div style="width:85%;border-radius:5px 5px 0 0;overflow:hidden;display:flex;flex-direction:column">
+          ${balH>0?`<div style="height:${balH}px;background:#eef1f5;border:1px solid #dde6f0;border-bottom:none"></div>`:''}
+          ${amortH>0?`<div style="height:${amortH}px;background:linear-gradient(180deg,#2ecc71,#1a7a3c)"></div>`:''}
         </div>
-        <span style="font-size:10px;color:#6b7a8d;text-align:center;word-break:break-word;max-width:70px">${shortName}</span>
       </div>`;
     }).join('');
     chartEl.innerHTML=`
-      <div style="display:flex;align-items:flex-end;gap:8px;padding:0 8px;border-bottom:2px solid #e8edf5;position:relative">
+      <div style="display:flex;align-items:flex-end;gap:6px;height:${chartH}px;border-bottom:2px solid #e8edf5;padding:0 4px;position:relative">
         ${cols}
       </div>
-      <div style="display:flex;gap:16px;margin-top:14px;justify-content:center">
+      <div style="display:flex;gap:6px;padding:6px 4px 0">
+        ${activeDebts.map(d=>{
+          const shortName=d.name.length>12?d.name.slice(0,11)+'…':d.name;
+          return`<div style="flex:1;text-align:center;font-size:10px;color:#9aa5b1;line-height:1.3">${shortName}</div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:16px;margin-top:10px;justify-content:center">
         <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#eef1f5;border:1px solid #d0d9e3"></div><span style="font-size:11px;color:#9aa5b1">Pendiente</span></div>
         <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#27ae60"></div><span style="font-size:11px;color:#9aa5b1">Amortizado</span></div>
       </div>`;
