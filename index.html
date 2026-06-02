@@ -861,13 +861,13 @@ async function forceSyncCloud(){
   }
   // Step 2: pull from cloud (now cloud has our latest)
   const updated=await cloudLoad();
-  if(updated){render();syncAirtable();}
-  if(el)el.textContent='☁️ Sincronizar';
+  if(updated)render();
+  syncAirtable(); // siempre recargar datos de Airtable
 }
 // Auto-sync every 15s when tab is visible
 setInterval(()=>{
   if(document.visibilityState==='visible'&&sessionStorage.getItem('enc_mode')&&!_pendingCloudSave){
-    cloudLoad().then(updated=>{if(updated){render();syncAirtable();}});
+    cloudLoad().then(updated=>{if(updated)render();syncAirtable();});
   }
 },15000);
 function load(){try{const r=localStorage.getItem('enc_v3');if(r){const p=JSON.parse(r);S={...S,...p};if(!S.settings)S.settings={tasaM2eq:1009};
@@ -969,6 +969,7 @@ function render(){
     varRealItems:      [...(_wOrig.varRealItems||[]),      ..._at.varReal],
     gerencialRealItems:[...(_wOrig.gerencialRealItems||[]),..._at.gerReal],
     otrosEgresoItems:  [...(_wOrig.otrosEgresoItems||[]),  ..._at.otrosReal],
+    amortizaciones:    [...(_wOrig.amortizaciones||[]),    ..._at.amortItems],
     m2eq:  _wOrig.m2eq||_at.m2eq,
     ivaReal: (_wOrig.ivaReal||0)+_at.ivaItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
     ppmReal: (_wOrig.ppmReal||0)+_at.ppmItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
@@ -1106,7 +1107,7 @@ function render(){
   debtSel.innerHTML=activeDebts.length?activeDebts.map(d=>`<option value="${d.id}">${d.name}</option>`).join(''):'<option value="">Sin deudas registradas</option>';
   const amortList=document.getElementById('amort-list');
   const amorts=w.amortizaciones||[];
-  amortList.innerHTML=amorts.length?amorts.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid #f0f3f7"><div><span class="badge br">Amort.</span>${a.debtName}</div><div style="display:flex;align-items:center;gap:8px"><span class="neg" style="font-weight:600">${clp(parseFloat(a.amount))}</span>${a.source!=='airtable'?`<button class="bx" onclick="delAmort('${a.id}')">×</button>`:''}</div></div>`).join(''):'';
+  amortList.innerHTML=amorts.length?amorts.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;border-bottom:1px solid #f0f3f7"><div><span class="badge br">Amort.</span>${a.desc||a.debtName||''}</div><div style="display:flex;align-items:center;gap:8px"><span class="neg" style="font-weight:600">${clp(parseFloat(a.amount))}</span>${a.source!=='airtable'?`<button class="bx" onclick="delAmort('${a.id}')">×</button>`:''}</div></div>`).join(''):'';
   // Charts
   renderCharts(c);
   renderUnpaid();
