@@ -97,6 +97,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f3f7;color:#1a
 /* BAR */
 .bar{height:16px;background:#eef1f5;border-radius:99px;overflow:hidden;margin-top:3px}
 .barf{height:100%;border-radius:99px;transition:width .4s;background:linear-gradient(90deg,#2ecc71,#1a7a3c)}
+#flow-card.hide-proy .acc-col:not(.real-col){display:none!important}
+#flow-card.hide-proy .cc-sum:not(.real-sum){display:none!important}
+#flow-card.hide-proy .g2>div:first-child{display:none!important}
+#flow-card.hide-proy .slbl .add-inline:not(.add-inline-real){display:none!important}
 /* TABLE */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:right;font-weight:600;font-size:11px;color:#6b7a8d;text-transform:uppercase;padding:8px;border-bottom:1px solid #dde3ec}
@@ -234,7 +238,7 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
       <div style="width:0"></div>
       <div style="flex:1"></div>
       <div class="acc-vals">
-        <div class="acc-col"><div style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em;text-align:right">Proyectado</div></div>
+        <div class="acc-col" id="proy-col-hdr"><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px"><span id="proy-toggle-btn" onclick="toggleProyCol()" style="cursor:pointer;font-size:10px;color:#c0c8d4;user-select:none" title="Ocultar/mostrar columna proyectado">&#9654;</span><span style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em">Proyectado</span></div></div>
         <div class="acc-col real-col"><div style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em;text-align:right">Real</div></div>
       </div>
     </div>
@@ -1114,6 +1118,7 @@ function render(){
   // Charts
   renderCharts(c);
   renderUnpaid();
+  applyProyColState();
 }
 
 function rInc(lid,items,field,bcls,label){
@@ -1521,7 +1526,26 @@ function renderDash(){
       </div>`;
   }
 }
-function goWeek(k){CWK=k;setTab('flujo',document.querySelector('.tbtn'));render();}
+function toggleProyCol(){
+  const card=document.getElementById('flow-card');
+  const hidden=card.classList.toggle('hide-proy');
+  const btn=document.getElementById('proy-toggle-btn');
+  if(btn)btn.style.transform=hidden?'rotate(180deg)':'';
+  const hdr=document.getElementById('proy-col-hdr');
+  if(hdr)hdr.style.opacity=hidden?'0.4':'1';
+  if(!S.settings)S.settings={};
+  S.settings.hideProy=hidden;
+  saveLocalOnly();
+}
+function applyProyColState(){
+  if(S.settings&&S.settings.hideProy){
+    document.getElementById('flow-card').classList.add('hide-proy');
+    const btn=document.getElementById('proy-toggle-btn');
+    if(btn)btn.style.transform='rotate(180deg)';
+    const hdr=document.getElementById('proy-col-hdr');
+    if(hdr)hdr.style.opacity='0.4';
+  }
+}
 function editDebt(id){
   const el=document.getElementById('dbt-edit-'+id);
   const open=el.style.display!=='none';
