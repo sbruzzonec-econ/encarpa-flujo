@@ -1416,7 +1416,7 @@ function renderDash(){
   const totalAmort=totalAmortFlow+totalManualAmort;
   const debtBal=Math.max(totalDebt-totalAmort,0);
   document.getElementById('d-deuda').textContent=clp(debtBal);
-  document.getElementById('d-dh').textContent=clp(totalDebt)+' total − '+clp(totalAmort)+' amortizado';
+  document.getElementById('d-dh').textContent='';
   const dl=document.getElementById('debt-list');
   if(!S.debts.length){dl.innerHTML='<div class="empty">Sin deudas</div>';}
   else{dl.innerHTML=S.debts.filter(d=>d.active).map(d=>{
@@ -1453,7 +1453,7 @@ function renderDash(){
         </div>
       </div>
       <div style="font-size:12px;color:#6b7a8d;display:flex;justify-content:space-between;margin-bottom:6px">
-        <span>Amortizado: <strong class="pos">${clp(dAmort)}</strong>${dManual>0?` <span style="opacity:.6;font-size:11px">(+${clp(dManual)} manual)</span>`:''}</span>
+        <span>Amortizado: <strong class="pos">${clp(dAmort)}</strong></span>
         <span>Saldo: <strong class="neg">${clp(dBal)}</strong></span>
       </div>
       <div class="bar"><div class="barf" style="width:${pct}%;background:#1a7a3c"></div></div>
