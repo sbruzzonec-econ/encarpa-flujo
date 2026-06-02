@@ -1500,12 +1500,12 @@ function renderDash(){
       const balH=totalH-amortH;
       const shortName=d.name.length>14?d.name.slice(0,13)+'…':d.name;
       return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;gap:4px">
-        <span style="font-size:11px;font-weight:600;color:#c0392b">${clp(dBal)}</span>
-        <div style="display:flex;flex-direction:column;justify-content:flex-end;height:${chartH}px;width:100%;max-width:60px">
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;height:${chartH}px;width:100%;max-width:60px;position:relative">
           <div style="display:flex;flex-direction:column;width:100%;border-radius:6px 6px 0 0;overflow:hidden">
-            ${balH>0?`<div style="height:${balH}px;background:#e74c3c;opacity:.85"></div>`:''}
+            ${balH>0?`<div style="height:${balH}px;background:#b0bec5"></div>`:''}
             ${amortH>0?`<div style="height:${amortH}px;background:linear-gradient(180deg,#27ae60,#1a7a3c)"></div>`:''}
           </div>
+          <span style="position:absolute;bottom:${totalH+3}px;left:0;right:0;text-align:center;font-size:10px;font-weight:600;color:#5f6b78;white-space:nowrap">${clp(dBal)}</span>
         </div>
         <span style="font-size:10px;color:#6b7a8d;text-align:center;word-break:break-word;max-width:70px">${shortName}</span>
       </div>`;
@@ -1515,7 +1515,7 @@ function renderDash(){
         ${cols}
       </div>
       <div style="display:flex;gap:16px;margin-top:12px;justify-content:center">
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:3px;background:#e74c3c;opacity:.85"></div><span style="font-size:11px;color:#6b7a8d">Pendiente</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:3px;background:#b0bec5"></div><span style="font-size:11px;color:#6b7a8d">Pendiente</span></div>
         <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:3px;background:#27ae60"></div><span style="font-size:11px;color:#6b7a8d">Amortizado</span></div>
       </div>`;
   }
