@@ -1502,8 +1502,8 @@ function renderDash(){
       return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;gap:4px">
         <div style="display:flex;flex-direction:column;justify-content:flex-end;height:${chartH}px;width:100%;max-width:60px;position:relative">
           <div style="display:flex;flex-direction:column;width:100%;border-radius:6px 6px 0 0;overflow:hidden">
-            ${balH>0?`<div style="height:${balH}px;background:#b0bec5"></div>`:''}
-            ${amortH>0?`<div style="height:${amortH}px;background:linear-gradient(180deg,#27ae60,#1a7a3c)"></div>`:''}
+            ${balH>0?`<div style="height:${balH}px;background:#eef1f5;border:1px solid #dde6f0;border-bottom:none"></div>`:''}
+            ${amortH>0?`<div style="height:${amortH}px;background:linear-gradient(180deg,#2ecc71,#1a7a3c)"></div>`:''}
           </div>
           <span style="position:absolute;bottom:${totalH+3}px;left:0;right:0;text-align:center;font-size:10px;font-weight:600;color:#5f6b78;white-space:nowrap">${clp(dBal)}</span>
         </div>
@@ -1511,12 +1511,12 @@ function renderDash(){
       </div>`;
     }).join('');
     chartEl.innerHTML=`
-      <div style="display:flex;align-items:flex-end;gap:10px;padding:0 4px">
+      <div style="display:flex;align-items:flex-end;gap:8px;padding:0 8px;border-bottom:2px solid #e8edf5;position:relative">
         ${cols}
       </div>
-      <div style="display:flex;gap:16px;margin-top:12px;justify-content:center">
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:3px;background:#b0bec5"></div><span style="font-size:11px;color:#6b7a8d">Pendiente</span></div>
-        <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:3px;background:#27ae60"></div><span style="font-size:11px;color:#6b7a8d">Amortizado</span></div>
+      <div style="display:flex;gap:16px;margin-top:14px;justify-content:center">
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#eef1f5;border:1px solid #d0d9e3"></div><span style="font-size:11px;color:#9aa5b1">Pendiente</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#27ae60"></div><span style="font-size:11px;color:#9aa5b1">Amortizado</span></div>
       </div>`;
   }
 }
