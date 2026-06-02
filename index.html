@@ -1421,10 +1421,13 @@ function renderDash(){
     const dAmort=dAmortFlow+dManual;
     const dBal=Math.max(d.total-dAmort,0);
     const pct=d.total>0?Math.min(dAmort/d.total*100,100):0;
+    const dIdx=S.debts.filter(x=>x.active).indexOf(d);
+    const dTotal=S.debts.filter(x=>x.active).length;
     return`<div style="padding:10px 0;border-bottom:1px solid #f0f3f7">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span style="font-weight:600">${d.name}${d.sincAT?'<span style="font-size:10px;margin-left:6px;background:#e8f0fe;color:#1a56db;padding:1px 6px;border-radius:8px;font-weight:600">AT</span>':''}</span>
-        <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          ${isViewer()?'':(`<div style="display:flex;flex-direction:column;gap:1px">${dIdx>0?'<button class="bx" style="font-size:10px;padding:1px 4px;line-height:1.2" onclick="moveDebt(\''+d.id+'\',-1)">▲</button>':'<span style="width:22px"></span>'}${dIdx<dTotal-1?'<button class="bx" style="font-size:10px;padding:1px 4px;line-height:1.2" onclick="moveDebt(\''+d.id+'\',1)">▼</button>':'<span style="width:22px"></span>'}</div>`)}
           <span style="font-size:14px;font-weight:600;color:#081342">${clp(d.total)}</span>
           ${isViewer()?'':('<button class="btn bsm" style="font-size:11px;padding:3px 8px" onclick="editDebt(\''+d.id+'\')">editar</button>')}
         </div>
@@ -1491,6 +1494,14 @@ function saveDebt(id,name,val,manualAmort,sincAT){
 }
 function addDebt(){const n=document.getElementById('dbt-n').value.trim();const t=parseFloat(document.getElementById('dbt-t').value)||0;if(!n)return;S.debts.push({id:uid(),name:n,total:t,active:true});document.getElementById('dbt-n').value='';document.getElementById('dbt-t').value='';tgl('add-dbt');save();render();renderDash();}
 function updDebt(id,v){const d=S.debts.find(x=>x.id===id);if(d){d.total=v;save();renderDash();}}
+function moveDebt(id,dir){
+  const idx=S.debts.findIndex(d=>d.id===id);
+  if(idx<0)return;
+  const target=idx+dir;
+  if(target<0||target>=S.debts.length)return;
+  const tmp=S.debts[idx];S.debts[idx]=S.debts[target];S.debts[target]=tmp;
+  save();renderDash();
+}
 function rmDebt(id){S.debts=S.debts.filter(d=>d.id!==id);save();renderDash();}
 
 // ==================== CONCEPTOS ====================
