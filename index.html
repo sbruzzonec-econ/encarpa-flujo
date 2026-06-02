@@ -1430,6 +1430,8 @@ function renderDash(){
         </div>
       </div>
       <div id="dbt-edit-${d.id}" style="display:none;margin-bottom:8px;background:#f7f9fc;border-radius:8px;padding:10px">
+        <div style="font-size:11px;color:#6b7a8d;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Nombre de la deuda</div>
+        <input type="text" id="dbt-name-${d.id}" value="${d.name}" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:14px;width:100%;margin-bottom:10px">
         <div style="font-size:11px;color:#6b7a8d;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Monto total adeudado</div>
         <input type="number" id="dbt-inp-${d.id}" value="${d.total}" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:14px;width:100%;margin-bottom:10px">
         <div style="font-size:11px;color:#6b7a8d;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Monto amortizado (no afecta flujo semanal)</div>
@@ -1439,7 +1441,7 @@ function renderDash(){
           Sumar automáticamente egresos de "Amortización préstamos bancarios" de Airtable
         </label>
         <div style="display:flex;gap:8px">
-          <button class="btn bsm btnp" style="flex:1" onclick="saveDebt('${d.id}',+document.getElementById('dbt-inp-${d.id}').value,+(document.getElementById('dbt-mamort-${d.id}').value||0),document.getElementById('dbt-sincat-${d.id}').checked)">Guardar</button>
+          <button class="btn bsm btnp" style="flex:1" onclick="saveDebt('${d.id}',document.getElementById('dbt-name-${d.id}').value,+document.getElementById('dbt-inp-${d.id}').value,+(document.getElementById('dbt-mamort-${d.id}').value||0),document.getElementById('dbt-sincat-${d.id}').checked)">Guardar</button>
           <button class="btn bsm" style="color:#c0392b;flex:1" onclick="if(confirm('\u00BFEliminar esta deuda?'))rmDebt('${d.id}')">Eliminar deuda</button>
         </div>
       </div>
@@ -1480,9 +1482,9 @@ function editDebt(id){
   el.style.display=open?'none':'block';
   if(!open){const inp=el.querySelector('input');inp.focus();inp.select();}
 }
-function saveDebt(id,val,manualAmort,sincAT){
+function saveDebt(id,name,val,manualAmort,sincAT){
   const d=S.debts.find(x=>x.id===id);
-  if(d){d.total=val;d.manualAmort=manualAmort||0;d.sincAT=!!sincAT;save();}
+  if(d){if(name&&name.trim())d.name=name.trim();d.total=val;d.manualAmort=manualAmort||0;d.sincAT=!!sincAT;save();}
   const el=document.getElementById('dbt-edit-'+id);
   if(el)el.style.display='none';
   renderDash();
