@@ -1481,7 +1481,7 @@ function renderDash(){
     </tr>`;
   }
   tb.innerHTML=rows;
-  // ── Gráfico de barras de deudas ──
+  // ── Gráfico de barras vertical de deudas ──
   const chartCard=document.getElementById('debt-chart-card');
   const chartEl=document.getElementById('debt-chart');
   const activeDebts=S.debts.filter(d=>d.active&&d.total>0);
@@ -1489,25 +1489,35 @@ function renderDash(){
   else{
     chartCard.style.display='block';
     const maxTotal=Math.max(...activeDebts.map(d=>d.total));
-    chartEl.innerHTML=activeDebts.map(d=>{
+    const chartH=200;
+    const cols=activeDebts.map(d=>{
       const dAmortFlow=amortByDebt[d.id]||0;
       const dManual=parseFloat(d.manualAmort)||0;
       const dAmort=Math.min(dAmortFlow+dManual,d.total);
       const dBal=Math.max(d.total-dAmort,0);
-      const pctAmort=d.total>0?Math.round(dAmort/d.total*100):0;
-      const barW=Math.round(d.total/maxTotal*100);
-      return`<div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-          <span style="font-size:12px;font-weight:600;color:#081342">${d.name}${d.sincAT?'<span style="font-size:9px;margin-left:5px;background:#e8f0fe;color:#1a56db;padding:1px 5px;border-radius:6px">AT</span>':''}</span>
-          <span style="font-size:11px;color:#6b7a8d">${clp(dBal)} restante · ${pctAmort}% amortizado</span>
+      const totalH=Math.round(d.total/maxTotal*chartH);
+      const amortH=Math.round(dAmort/d.total*totalH);
+      const balH=totalH-amortH;
+      const shortName=d.name.length>14?d.name.slice(0,13)+'…':d.name;
+      return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;gap:4px">
+        <span style="font-size:11px;font-weight:600;color:#c0392b">${clp(dBal)}</span>
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;height:${chartH}px;width:100%;max-width:60px">
+          <div style="display:flex;flex-direction:column;width:100%;border-radius:6px 6px 0 0;overflow:hidden">
+            ${balH>0?`<div style="height:${balH}px;background:#e74c3c;opacity:.85"></div>`:''}
+            ${amortH>0?`<div style="height:${amortH}px;background:linear-gradient(180deg,#27ae60,#1a7a3c)"></div>`:''}
+          </div>
         </div>
-        <div style="position:relative;height:20px;border-radius:10px;overflow:hidden;background:#f0f3f7;width:100%">
-          <div style="position:absolute;left:0;top:0;height:100%;border-radius:10px;background:#e8f5e9;width:${barW}%;transition:width .3s"></div>
-          <div style="position:absolute;left:0;top:0;height:100%;border-radius:10px;background:linear-gradient(90deg,#1a7a3c,#2ecc71);width:${barW*pctAmort/100}%;transition:width .3s"></div>
-          <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#5f6b78">${clp(d.total)}</div>
-        </div>
+        <span style="font-size:10px;color:#6b7a8d;text-align:center;word-break:break-word;max-width:70px">${shortName}</span>
       </div>`;
     }).join('');
+    chartEl.innerHTML=`
+      <div style="display:flex;align-items:flex-end;gap:10px;padding:0 4px">
+        ${cols}
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px;justify-content:center">
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:3px;background:#e74c3c;opacity:.85"></div><span style="font-size:11px;color:#6b7a8d">Pendiente</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:12px;border-radius:3px;background:#27ae60"></div><span style="font-size:11px;color:#6b7a8d">Amortizado</span></div>
+      </div>`;
   }
 }
 function goWeek(k){CWK=k;setTab('flujo',document.querySelector('.tbtn'));render();}
