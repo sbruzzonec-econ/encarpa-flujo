@@ -95,8 +95,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f3f7;color:#1a
 .verdict{padding:12px 16px;border-radius:8px;font-weight:600;text-align:center;font-size:14px;margin-top:8px}
 .vy{background:#e4f5ea;color:#1a7a3c}.vn{background:#fce8e6;color:#c0392b}.vw{background:#fef0d5;color:#8a6212}
 /* BAR */
-.bar{height:16px;background:#eef1f5;border-radius:99px;overflow:hidden;margin-top:4px}
-.barf{height:100%;border-radius:99px;transition:width .4s;background:linear-gradient(90deg,#1a7a3c,#2ecc71)}
+.bar{height:16px;background:#eef1f5;border-radius:99px;overflow:hidden;margin-top:3px}
+.barf{height:100%;border-radius:99px;transition:width .4s;background:linear-gradient(90deg,#2ecc71,#1a7a3c)}
 /* TABLE */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:right;font-weight:600;font-size:11px;color:#6b7a8d;text-transform:uppercase;padding:8px;border-bottom:1px solid #dde3ec}
@@ -1427,7 +1427,7 @@ function renderDash(){
     const pct=d.total>0?Math.min(dAmort/d.total*100,100):0;
     const dIdx=S.debts.filter(x=>x.active).indexOf(d);
     const dTotal=S.debts.filter(x=>x.active).length;
-    return`<div style="padding:4px 0;border-bottom:1px solid #f0f3f7">
+    return`<div style="padding:2px 0;border-bottom:1px solid #f0f3f7">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span style="font-weight:600">${d.name}${d.sincAT?'<span style="font-size:10px;margin-left:6px;background:#e8f0fe;color:#1a56db;padding:1px 6px;border-radius:8px;font-weight:600">AT</span>':''}</span>
         <div style="display:flex;align-items:center;gap:6px">
@@ -1452,7 +1452,7 @@ function renderDash(){
           <button class="btn bsm" style="color:#c0392b;flex:1" onclick="if(confirm('\u00BFEliminar esta deuda?'))rmDebt('${d.id}')">Eliminar deuda</button>
         </div>
       </div>
-      <div style="font-size:12px;color:#6b7a8d;display:flex;justify-content:space-between;margin-bottom:2px">
+      <div style="font-size:12px;color:#6b7a8d;display:flex;justify-content:space-between;margin-bottom:1px">
         <span>Amortizado: <strong class="pos">${clp(dAmort)}</strong></span>
         
       </div>
