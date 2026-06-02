@@ -80,9 +80,9 @@ module.exports = async (req, res) => {
       const fecha      = nd(f['Fecha del movimiento']);
       const flujo      = fv(f['Flujo']);
 
-      // Display: Descripción if available, else concept + person name
-      const desc = descripcion
-        || (personal ? `${concepto} — ${personal}` : concepto);
+      // Display: concept (+ person if salary) + description if available
+      const nameBase = personal ? `${concepto} — ${personal}` : concepto;
+      const desc = descripcion ? `${nameBase} — ${descripcion}` : nameBase;
 
       if (flujo === 'Ingreso') {
         ingresos.push({ id: r.id, desc, amount: monto, fecha, concepto, source: 'airtable' });
