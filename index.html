@@ -1402,6 +1402,10 @@ function renderDash(){
   // Amortizaciones desde flujo semanal (afectan caja real)
   const amortByDebt={};
   Object.values(S.weeks).forEach(w=>{(w.amortizaciones||[]).forEach(a=>{amortByDebt[a.debtId]=(amortByDebt[a.debtId]||0)+(parseFloat(a.amount)||0);});});
+  // Amortizaciones reales de Airtable → van a la deuda con sincAT=true
+  const atAmortTotal=(AT.amort||[]).reduce((s,a)=>s+(parseFloat(a.amount)||0),0);
+  const sincATDebt=S.debts.find(d=>d.active&&d.sincAT);
+  if(sincATDebt&&atAmortTotal>0) amortByDebt[sincATDebt.id]=(amortByDebt[sincATDebt.id]||0)+atAmortTotal;
   const totalAmortFlow=Object.values(amortByDebt).reduce((s,v)=>s+v,0);
   // Amortizaciones manuales en Deudas (solo para saldo, no afectan flujo)
   const totalManualAmort=S.debts.filter(d=>d.active).reduce((s,d)=>s+(parseFloat(d.manualAmort)||0),0);
@@ -1419,7 +1423,7 @@ function renderDash(){
     const pct=d.total>0?Math.min(dAmort/d.total*100,100):0;
     return`<div style="padding:10px 0;border-bottom:1px solid #f0f3f7">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-weight:600">${d.name}</span>
+        <span style="font-weight:600">${d.name}${d.sincAT?'<span style="font-size:10px;margin-left:6px;background:#e8f0fe;color:#1a56db;padding:1px 6px;border-radius:8px;font-weight:600">AT</span>':''}</span>
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:14px;font-weight:600;color:#081342">${clp(d.total)}</span>
           ${isViewer()?'':('<button class="btn bsm" style="font-size:11px;padding:3px 8px" onclick="editDebt(\''+d.id+'\')">editar</button>')}
@@ -1430,8 +1434,12 @@ function renderDash(){
         <input type="number" id="dbt-inp-${d.id}" value="${d.total}" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:14px;width:100%;margin-bottom:10px">
         <div style="font-size:11px;color:#6b7a8d;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Monto amortizado (no afecta flujo semanal)</div>
         <input type="number" id="dbt-mamort-${d.id}" value="${dManual||''}" placeholder="0" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:14px;width:100%;margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;font-size:13px;color:#5f6b78">
+          <input type="checkbox" id="dbt-sincat-${d.id}" ${d.sincAT?'checked':''} style="width:16px;height:16px;cursor:pointer">
+          Sumar automáticamente egresos de "Amortización préstamos bancarios" de Airtable
+        </label>
         <div style="display:flex;gap:8px">
-          <button class="btn bsm btnp" style="flex:1" onclick="saveDebt('${d.id}',+document.getElementById('dbt-inp-${d.id}').value,+(document.getElementById('dbt-mamort-${d.id}').value||0))">Guardar</button>
+          <button class="btn bsm btnp" style="flex:1" onclick="saveDebt('${d.id}',+document.getElementById('dbt-inp-${d.id}').value,+(document.getElementById('dbt-mamort-${d.id}').value||0),document.getElementById('dbt-sincat-${d.id}').checked)">Guardar</button>
           <button class="btn bsm" style="color:#c0392b;flex:1" onclick="if(confirm('\u00BFEliminar esta deuda?'))rmDebt('${d.id}')">Eliminar deuda</button>
         </div>
       </div>
@@ -1472,9 +1480,9 @@ function editDebt(id){
   el.style.display=open?'none':'block';
   if(!open){const inp=el.querySelector('input');inp.focus();inp.select();}
 }
-function saveDebt(id,val,manualAmort){
+function saveDebt(id,val,manualAmort,sincAT){
   const d=S.debts.find(x=>x.id===id);
-  if(d){d.total=val;d.manualAmort=manualAmort||0;save();}
+  if(d){d.total=val;d.manualAmort=manualAmort||0;d.sincAT=!!sincAT;save();}
   const el=document.getElementById('dbt-edit-'+id);
   if(el)el.style.display='none';
   renderDash();
