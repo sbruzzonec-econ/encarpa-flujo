@@ -1428,7 +1428,7 @@ function renderDash(){
     const dIdx=S.debts.filter(x=>x.active).indexOf(d);
     const dTotal=S.debts.filter(x=>x.active).length;
     return`<div style="padding:2px 0;border-bottom:1px solid #f0f3f7">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
         <span style="font-weight:600">${d.name}${d.sincAT?'<span style="font-size:10px;margin-left:6px;background:#e8f0fe;color:#1a56db;padding:1px 6px;border-radius:8px;font-weight:600">AT</span>':''}</span>
         <div style="display:flex;align-items:center;gap:6px">
           ${isViewer()?'':(`<div style="display:flex;flex-direction:column;gap:1px">${dIdx>0?'<button class="bx" style="font-size:10px;padding:1px 4px;line-height:1.2" onclick="moveDebt(\''+d.id+'\',-1)">▲</button>':'<span style="width:22px"></span>'}${dIdx<dTotal-1?'<button class="bx" style="font-size:10px;padding:1px 4px;line-height:1.2" onclick="moveDebt(\''+d.id+'\',1)">▼</button>':'<span style="width:22px"></span>'}</div>`)}
