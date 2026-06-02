@@ -98,6 +98,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f0f3f7;color:#1a
 .bar{height:16px;background:#eef1f5;border-radius:99px;overflow:hidden;margin-top:3px}
 .barf{height:100%;border-radius:99px;transition:width .4s;background:linear-gradient(90deg,#2ecc71,#1a7a3c)}
 #flow-card.hide-proy .acc-col:not(.real-col){display:none!important}
+#flow-card.hide-proy #proy-toggle-btn{display:inline!important}
+#flow-card.hide-proy #proy-col-hdr{display:flex!important;opacity:.5;min-width:0;width:auto}
 #flow-card.hide-proy .cc-sum:not(.real-sum){display:none!important}
 #flow-card.hide-proy .g2>div:first-child{display:none!important}
 #flow-card.hide-proy .slbl .add-inline:not(.add-inline-real){display:none!important}
@@ -237,9 +239,8 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
     <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:#f7f9fc;border-bottom:1px solid #e8edf5">
       <div style="width:0"></div>
       <div style="flex:1"></div>
-      <button id="proy-toggle-btn" onclick="toggleProyCol()" style="background:none;border:1px solid #d0d9e3;border-radius:6px;cursor:pointer;font-size:10px;color:#9aa5b1;padding:2px 7px;font-weight:600;white-space:nowrap">Proyectado ◀</button>
       <div class="acc-vals">
-        <div class="acc-col" id="proy-col-hdr"><div style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em;text-align:right">Proyectado</div></div>
+        <div class="acc-col" id="proy-col-hdr"><div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><span style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em">Proyectado</span><button id="proy-toggle-btn" onclick="toggleProyCol()" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0;line-height:1;display:inline!important">◀</button></div></div>
         <div class="acc-col real-col"><div style="font-size:10px;font-weight:700;color:#9aa5b1;text-transform:uppercase;letter-spacing:.06em;text-align:right">Real</div></div>
       </div>
     </div>
@@ -1531,7 +1532,7 @@ function toggleProyCol(){
   const card=document.getElementById('flow-card');
   const hidden=card.classList.toggle('hide-proy');
   const btn=document.getElementById('proy-toggle-btn');
-  if(btn)btn.textContent=hidden?'Proyectado ▶':'Proyectado ◀';
+  if(btn)btn.textContent=hidden?'▶':'◀';
   if(!S.settings)S.settings={};
   S.settings.hideProy=hidden;
   saveLocalOnly();
@@ -1540,7 +1541,7 @@ function applyProyColState(){
   const hidden=S.settings&&S.settings.hideProy;
   document.getElementById('flow-card').classList.toggle('hide-proy',!!hidden);
   const btn=document.getElementById('proy-toggle-btn');
-  if(btn)btn.textContent=hidden?'Proyectado ▶':'Proyectado ◀';
+  if(btn)btn.textContent=hidden?'▶':'◀';
 }
 function editDebt(id){
   const el=document.getElementById('dbt-edit-'+id);
