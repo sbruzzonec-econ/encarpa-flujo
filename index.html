@@ -482,10 +482,10 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
     <div style="margin:0 16px;border-top:1.5px solid #b0bac8"></div>
 
     <!-- Flujo neto -->
-    <div style="padding:11px 16px;display:flex;align-items:center;gap:10px;background:#fff">
+    <div id="flujo-neto-row" style="padding:11px 16px;display:flex;align-items:center;gap:10px;background:#fff">
       <span class="acc-sign" style="color:#5f6b78;font-size:16px">=</span>
-      <span style="font-size:13px;font-weight:600;color:#5f6b78;flex:1">Flujo neto</span>
-      <div class="acc-vals">
+      <span style="font-size:13px;font-weight:600;color:#5f6b78;flex:1">Flujo neto <button onclick="toggleFlujoNeto()" id="flujoneto-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0 2px;line-height:1;vertical-align:middle">◀</button></span>
+      <div class="acc-vals" id="flujo-neto-vals">
         <div class="acc-col"><div class="cc-val" id="h-flujo-p">$0</div></div>
         <div class="acc-col real-col"><div class="cc-val" id="h-flujo-r">$0</div></div>
       </div>
@@ -1122,6 +1122,7 @@ function render(){
   renderCharts(c);
   renderUnpaid();
   applyProyColState();
+  applyFlujoNetoState();
 }
 
 function rInc(lid,items,field,bcls,label){
@@ -1530,6 +1531,24 @@ function renderDash(){
   }
 }
 function goWeek(k){CWK=k;setTab('flujo',document.querySelector('.tbtn'));render();}
+function toggleFlujoNeto(){
+  const vals=document.getElementById('flujo-neto-vals');
+  const btn=document.getElementById('flujoneto-btn');
+  const hidden=vals.style.display==='none';
+  vals.style.display=hidden?'':'none';
+  if(btn)btn.textContent=hidden?'◀':'▶';
+  if(!S.settings)S.settings={};
+  S.settings.hideFlujoNeto=!hidden;
+  saveLocalOnly();
+}
+function applyFlujoNetoState(){
+  if(S.settings&&S.settings.hideFlujoNeto){
+    const vals=document.getElementById('flujo-neto-vals');
+    const btn=document.getElementById('flujoneto-btn');
+    if(vals)vals.style.display='none';
+    if(btn)btn.textContent='▶';
+  }
+}
 function toggleProyCol(){
   const card=document.getElementById('flow-card');
   const hidden=card.classList.toggle('hide-proy');
