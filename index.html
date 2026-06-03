@@ -420,8 +420,14 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
             <input id="agr-a" type="number" placeholder="Monto">
             <div style="margin-top:6px"><button class="btn bsm btnp" onclick="addGerReal()">Guardar</button> <button class="btn bsm" onclick="tgl('agr')">Cancelar</button></div>
           </div>
+          <div class="aform" id="agp" style="display:none">
+            <div class="hint">Retiro familia proyectado (planificado) para esta semana — aún no pagado.</div>
+            <input id="agp-d" placeholder="Descripción — ej: Josefa viernes, Tottus lunes">
+            <input id="agp-a" type="number" placeholder="Monto">
+            <div style="margin-top:6px"><button class="btn bsm btnp" onclick="addGerProy()">Guardar</button> <button class="btn bsm" onclick="tgl('agp')">Cancelar</button></div>
+          </div>
           <div class="g2" style="margin:0">
-            <div><div class="slbl">Proyectado esta semana</div><div id="list-gp"></div></div>
+            <div><div class="slbl">Proyectado esta semana <button class="add-inline add-inline-real" onclick="tgl('agp');event.stopPropagation()">+</button></div><div id="list-gp"></div></div>
             <div><div class="slbl">Real pagado <button class="add-inline add-inline-real" onclick="tgl('agr');event.stopPropagation()">+</button></div><div id="list-gr"></div></div>
           </div>
         </div>
@@ -939,7 +945,7 @@ function calcW(k, _override, _useProjOpening){
   const fCs=cs.filter(c=>['sueldo_semanal','imposiciones','gasto_fijo'].includes(c.cat));
   const gCs=cs.filter(c=>c.cat==='retiro_familia');
   const fijosProy=fCs.reduce((s,c)=>s+c.amount,0);
-  const gerProy=gCs.reduce((s,c)=>s+c.amount,0);
+  const gerProy=gCs.reduce((s,c)=>s+c.amount,0)+(w.gerencialProyItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const ingProy=(w.incomeProy||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const ingReal=(w.incomeReal||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const m2eq=parseFloat(w.m2eq)||0;
@@ -1077,7 +1083,9 @@ function render(){
 
   // Gerencial
   const gpl=document.getElementById('list-gp');
-  gpl.innerHTML=c.gCs.length?c.gCs.map(x=>`<div class="row"><span>${x.name}</span><span class="neg-dim" style="font-weight:600">${clp(x.amount)}</span></div>`).join(''):'<div class="empty">Sin retiro familia proyectado</div>';
+  const gpConcepts=c.gCs.map(x=>`<div class="row"><span>${x.name}</span><span class="neg-dim" style="font-weight:600">${clp(x.amount)}</span></div>`).join('');
+  const gpManual=(w.gerencialProyItems||[]).map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg-dim" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${isViewer()?'':`<button class="bx" onclick="delGP('${i.id}')">×</button>`}</div></div>`).join('');
+  gpl.innerHTML=(gpConcepts+gpManual)||'<div class="empty">Sin retiro familia proyectado</div>';
   rGerReal(w,c);
 
   // Variable
@@ -1240,6 +1248,16 @@ function addGerReal(){
   tgl('agr');save();render();
 }
 function delGR(id){if(!S.weeks[CWK])return;S.weeks[CWK].gerencialRealItems=(S.weeks[CWK].gerencialRealItems||[]).filter(i=>i.id!==id);save();render();}
+function addGerProy(){
+  const d=document.getElementById('agp-d').value.trim();const a=parseFloat(document.getElementById('agp-a').value);
+  if(!d||!a)return;
+  if(!S.weeks[CWK])S.weeks[CWK]={};
+  if(!S.weeks[CWK].gerencialProyItems)S.weeks[CWK].gerencialProyItems=[];
+  S.weeks[CWK].gerencialProyItems.push({id:uid(),desc:d,amount:a});
+  document.getElementById('agp-d').value='';document.getElementById('agp-a').value='';
+  tgl('agp');save();render();
+}
+function delGP(id){if(!S.weeks[CWK])return;S.weeks[CWK].gerencialProyItems=(S.weeks[CWK].gerencialProyItems||[]).filter(i=>i.id!==id);save();render();}
 
 // ===== NO PAGADAS DEL SUELDO GERENCIAL =====
 function wkLabel(k){
