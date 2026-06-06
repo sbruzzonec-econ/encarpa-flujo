@@ -329,12 +329,19 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
         <div class="cc-det" id="det-var">
           <div class="g2" style="margin-top:8px">
             <div class="ic admin-only">
-              <div class="ml">Proyectado — m²eq × $<span id="tasa-lbl">1.009</span></div>
+              <div class="slbl">Proyectado <button class="add-inline add-inline-real" onclick="tgl('avp');event.stopPropagation()">+</button></div>
+              <div class="ml" style="margin-top:4px">m²eq × $<span id="tasa-lbl">1.009</span></div>
               <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px">
                 <label style="font-size:12px;color:#6b7a8d;white-space:nowrap">m²eq:</label>
                 <input type="number" id="f-m2" placeholder="0" style="border:1px solid #d0d9e3;border-radius:7px;padding:6px 10px;font-size:15px;font-weight:700;width:100%" oninput="patchW('m2eq',this.value);render()">
               </div>
               <div style="font-size:13px;color:#8a6212">Estimado: <strong id="vp-amt">$0</strong></div>
+              <div class="aform" id="avp" style="display:none;margin-top:8px">
+                <input id="avp-d" placeholder="Descripción — ej: flete extra, insumos bodega">
+                <input id="avp-a" type="number" placeholder="Monto">
+                <div style="margin-top:7px"><button class="btn bsm btnp" onclick="addVarProy()">Guardar</button> <button class="btn bsm" onclick="tgl('avp')">Cancelar</button></div>
+              </div>
+              <div id="list-vp" style="margin-top:4px"></div>
             </div>
             <div>
               <div class="slbl">Real <button class="add-inline add-inline-real" onclick="tgl('avr');event.stopPropagation()">+</button></div>
@@ -950,7 +957,7 @@ function calcW(k, _override, _useProjOpening){
   const ingReal=(w.incomeReal||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const m2eq=parseFloat(w.m2eq)||0;
   const tasa=S.settings.tasaM2eq||1009;
-  const varProy=m2eq*tasa;
+  const varProy=m2eq*tasa+(w.varProyItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const varReal=(w.varRealItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const ivaProy=parseFloat(w.ivaProy)||0;
   const ivaReal=parseFloat(w.ivaReal)||0;
@@ -1091,7 +1098,10 @@ function render(){
   // Variable
   const fm=document.getElementById('f-m2');
   if(document.activeElement!==fm)fm.value=w.m2eq||'';
-  document.getElementById('vp-amt').textContent=clp(c.varProy);
+  document.getElementById('vp-amt').textContent=clp(m2eq*(c.tasa||0));
+  const vpEl=document.getElementById('list-vp');
+  const vpItems=w.varProyItems||[];
+  vpEl.innerHTML=vpItems.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg-dim" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${isViewer()?'':`<button class="bx" onclick="delVP('${i.id}')">×</button>`}</div></div>`).join('');
   rVarReal(w);
 
   // IVA / PPM — condicional según semana de pago
@@ -1258,6 +1268,17 @@ function addGerProy(){
   tgl('agp');save();render();
 }
 function delGP(id){if(!S.weeks[CWK])return;S.weeks[CWK].gerencialProyItems=(S.weeks[CWK].gerencialProyItems||[]).filter(i=>i.id!==id);save();render();}
+
+function addVarProy(){
+  const d=document.getElementById('avp-d').value.trim();const a=parseFloat(document.getElementById('avp-a').value);
+  if(!d||!a)return;
+  if(!S.weeks[CWK])S.weeks[CWK]={};
+  if(!S.weeks[CWK].varProyItems)S.weeks[CWK].varProyItems=[];
+  S.weeks[CWK].varProyItems.push({id:uid(),desc:d,amount:a});
+  document.getElementById('avp-d').value='';document.getElementById('avp-a').value='';
+  tgl('avp');save();render();
+}
+function delVP(id){if(!S.weeks[CWK])return;S.weeks[CWK].varProyItems=(S.weeks[CWK].varProyItems||[]).filter(i=>i.id!==id);save();render();}
 
 // ===== NO PAGADAS DEL SUELDO GERENCIAL =====
 function wkLabel(k){
