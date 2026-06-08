@@ -1892,6 +1892,34 @@ async function syncAirtable(){
     // Store pending in localStorage if not already assigned
     if(!S.pendientes)S.pendientes=[];
     renderPendientes();
+    // Recalcular la cadena de _fin para semanas recientes antes de render(),
+    // para que el "Saldo lunes" de la semana actual use siempre el _fin correcto
+    // y no el valor desactualizado que pueda traer cloudLoad().
+    const chainStart=new Date();chainStart.setDate(chainStart.getDate()-56);
+    const chainEnd=new Date();chainEnd.setDate(chainEnd.getDate()+7);
+    for(let d=new Date(chainStart);d<=chainEnd;d.setDate(d.getDate()+7)){
+      const ck=monKey(new Date(d));
+      const _wOrig=getW(ck);
+      const _atc=atForWeek(ck);
+      const wc={..._wOrig,
+        incomeReal:   [...(_wOrig.incomeReal||[]),   ..._atc.ingReal],
+        incomeProy:   [...(_wOrig.incomeProy||[]),   ..._atc.ingProy],
+        fijosRealItems:    [...(_wOrig.fijosRealItems||[]),    ..._atc.fijosReal],
+        varRealItems:      [...(_wOrig.varRealItems||[]),      ..._atc.varReal],
+        gerencialRealItems:[...(_wOrig.gerencialRealItems||[]),..._atc.gerReal],
+        otrosEgresoItems:  [...(_wOrig.otrosEgresoItems||[]),  ..._atc.otrosReal],
+        amortizaciones:    [...(_wOrig.amortizaciones||[]),    ..._atc.amortItems],
+        m2eq: _wOrig.m2eq,
+        ivaReal: (_wOrig.ivaReal||0)+_atc.ivaItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
+        ppmReal: (_wOrig.ppmReal||0)+_atc.ppmItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
+      };
+      const todayKey=monKey(new Date());
+      const cc=calcW(ck, wc, ck>todayKey);
+      if(!S.weeks[ck])S.weeks[ck]={};
+      S.weeks[ck]._fin=cc.saldoFinal;
+      S.weeks[ck]._finProy=cc.projClosing;
+    }
+    saveLocalOnly();
     setSyncStatus('Actualizado '+new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}),false);
     render();
   }catch(err){
