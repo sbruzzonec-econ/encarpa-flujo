@@ -14,6 +14,7 @@ const EGRESO_MAP = {
   'Insumos':                           'variables',
   'Subarriendo activos fijos':         'variables',
   'Costuras y confección':             'variables',
+  'Gasto operativo':                   'variables',
   'Sueldo base':                       'fijos',
   'Marketing y publicidad':            'fijos',
   'Arriendo bodega/Servicios básicos': 'fijos',
