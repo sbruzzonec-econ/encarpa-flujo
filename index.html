@@ -329,12 +329,19 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
         <div class="cc-det" id="det-var">
           <div class="g2" style="margin-top:8px">
             <div class="ic admin-only">
-              <div class="ml">Proyectado — m²eq × $<span id="tasa-lbl">1.009</span></div>
+              <div class="slbl">Proyectado <button class="add-inline add-inline-real" onclick="tgl('avp');event.stopPropagation()">+</button></div>
+              <div class="ml" style="margin-top:4px">m²eq × $<span id="tasa-lbl">1.009</span></div>
               <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px">
                 <label style="font-size:12px;color:#6b7a8d;white-space:nowrap">m²eq:</label>
                 <input type="number" id="f-m2" placeholder="0" style="border:1px solid #d0d9e3;border-radius:7px;padding:6px 10px;font-size:15px;font-weight:700;width:100%" oninput="patchW('m2eq',this.value);render()">
               </div>
               <div style="font-size:13px;color:#8a6212">Estimado: <strong id="vp-amt">$0</strong></div>
+              <div class="aform" id="avp" style="display:none;margin-top:8px">
+                <input id="avp-d" placeholder="Descripción — ej: flete extra, insumos bodega">
+                <input id="avp-a" type="number" placeholder="Monto">
+                <div style="margin-top:7px"><button class="btn bsm btnp" onclick="addVarProy()">Guardar</button> <button class="btn bsm" onclick="tgl('avp')">Cancelar</button></div>
+              </div>
+              <div id="list-vp" style="margin-top:4px"></div>
             </div>
             <div>
               <div class="slbl">Real <button class="add-inline add-inline-real" onclick="tgl('avr');event.stopPropagation()">+</button></div>
@@ -420,8 +427,14 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
             <input id="agr-a" type="number" placeholder="Monto">
             <div style="margin-top:6px"><button class="btn bsm btnp" onclick="addGerReal()">Guardar</button> <button class="btn bsm" onclick="tgl('agr')">Cancelar</button></div>
           </div>
+          <div class="aform" id="agp" style="display:none">
+            <div class="hint">Retiro familia proyectado (planificado) para esta semana — aún no pagado.</div>
+            <input id="agp-d" placeholder="Descripción — ej: Josefa viernes, Tottus lunes">
+            <input id="agp-a" type="number" placeholder="Monto">
+            <div style="margin-top:6px"><button class="btn bsm btnp" onclick="addGerProy()">Guardar</button> <button class="btn bsm" onclick="tgl('agp')">Cancelar</button></div>
+          </div>
           <div class="g2" style="margin:0">
-            <div><div class="slbl">Proyectado esta semana</div><div id="list-gp"></div></div>
+            <div><div class="slbl">Proyectado esta semana <button class="add-inline add-inline-real" onclick="tgl('agp');event.stopPropagation()">+</button></div><div id="list-gp"></div></div>
             <div><div class="slbl">Real pagado <button class="add-inline add-inline-real" onclick="tgl('agr');event.stopPropagation()">+</button></div><div id="list-gr"></div></div>
           </div>
         </div>
@@ -449,30 +462,6 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
               <div><div class="ml">Real</div><input type="number" id="f-ppmr" placeholder="0" style="border:1px solid #d0d9e3;border-radius:8px;padding:8px 10px;font-size:16px;font-weight:700;width:100%;margin-top:4px" oninput="patchW('ppmReal',this.value);render()"><div class="mh">PPM efectivamente pagado</div></div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Amortización de deuda -->
-      <div class="cc-sub">
-        <div class="cc-hdr" onclick="togSec('det-amort',this)">
-          <div class="cc-left"><span class="chev">▶</span><span class="cc-title">Amortización de deuda</span></div>
-          <div class="cc-sums">
-            <div class="cc-sum"><div class="cc-lbl">Proyectado</div><div class="cc-val" style="color:#9aa5b1">—</div></div>
-            <div class="cc-sum real-sum"><div class="cc-lbl">Real</div><div class="cc-val neg" id="h-amort-r">$0</div></div>
-          </div>
-        </div>
-        <div class="cc-det" id="det-amort">
-          <div class="slbl" style="margin-top:8px">Agregar <button class="add-inline add-inline-real" onclick="tgl('amort-form');event.stopPropagation()">+</button></div>
-          <div id="amort-form" style="display:none" class="aform">
-            <div class="hint">Selecciona la deuda a amortizar y el monto.</div>
-            <div class="ar" style="margin-bottom:8px">
-              <select id="amort-debt" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fff;width:100%"></select>
-              <input type="number" id="amort-amt" placeholder="Monto" style="width:100%">
-            </div>
-            <button class="btn bsm btnp" onclick="addAmort()">Guardar</button>
-            <button class="btn bsm" onclick="tgl('amort-form')" style="margin-left:6px">Cancelar</button>
-          </div>
-          <div id="amort-list"></div>
         </div>
       </div>
 
@@ -509,6 +498,34 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
 
     <!-- Línea doble — total final contable -->
     <div style="border-top:3px double #081342;margin:0 16px"></div>
+
+    <!-- Amortización de deuda -->
+    <div id="amort-row" style="background:#fff">
+      <div style="padding:9px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0f3f7">
+        <span class="acc-sign" style="color:#c0392b;font-size:16px">−</span>
+        <span style="font-size:13px;font-weight:600;color:#5f6b78;flex:1;cursor:pointer" onclick="togSec('det-amort',this.querySelector('.chev-amort'))">
+          <span class="chev-amort" style="font-size:10px;transition:transform .2s;display:inline-block;margin-right:4px;color:#c0c8d4">▶</span>Amortización de deuda
+          <button onclick="toggleAmortRow();event.stopPropagation()" id="amort-tog-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0 2px;line-height:1;vertical-align:middle;margin-left:4px">◀</button>
+        </span>
+        <div class="acc-vals">
+          <div class="acc-col"></div>
+          <div class="acc-col real-col"><div class="cc-val neg" id="h-amort-r" style="font-size:15px">$0</div></div>
+        </div>
+      </div>
+      <div id="det-amort" style="display:none;padding:4px 16px 8px">
+        <div class="slbl" style="margin-top:8px">Agregar <button class="add-inline add-inline-real" onclick="tgl('amort-form');event.stopPropagation()">+</button></div>
+        <div id="amort-form" style="display:none" class="aform">
+          <div class="hint">Selecciona la deuda a amortizar y el monto.</div>
+          <div class="ar" style="margin-bottom:8px">
+            <select id="amort-debt" style="border:1px solid #d0d9e3;border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fff;width:100%"></select>
+            <input type="number" id="amort-amt" placeholder="Monto" style="width:100%">
+          </div>
+          <button class="btn bsm btnp" onclick="addAmort()">Guardar</button>
+          <button class="btn bsm" onclick="tgl('amort-form')" style="margin-left:6px">Cancelar</button>
+        </div>
+        <div id="amort-list"></div>
+      </div>
+    </div>
 
     <!-- Saldo final -->
     <div style="padding:14px 16px;background:#fff;display:flex;align-items:center;gap:10px">
@@ -939,12 +956,12 @@ function calcW(k, _override, _useProjOpening){
   const fCs=cs.filter(c=>['sueldo_semanal','imposiciones','gasto_fijo'].includes(c.cat));
   const gCs=cs.filter(c=>c.cat==='retiro_familia');
   const fijosProy=fCs.reduce((s,c)=>s+c.amount,0);
-  const gerProy=gCs.reduce((s,c)=>s+c.amount,0);
+  const gerProy=gCs.reduce((s,c)=>s+c.amount,0)+(w.gerencialProyItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const ingProy=(w.incomeProy||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const ingReal=(w.incomeReal||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const m2eq=parseFloat(w.m2eq)||0;
   const tasa=S.settings.tasaM2eq||1009;
-  const varProy=m2eq*tasa;
+  const varProy=m2eq*tasa+(w.varProyItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const varReal=(w.varRealItems||[]).reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
   const ivaProy=parseFloat(w.ivaProy)||0;
   const ivaReal=parseFloat(w.ivaReal)||0;
@@ -1015,7 +1032,7 @@ function render(){
 
   // Egresos summary card
   const totalEgrProy=c.fijosProy+c.gerProy+c.varProy+c.ivaProy+c.ppmProy+c.otrosProy;
-  const totalEgrReal=c.fijosReal+c.gerReal+c.varReal+c.ivaReal+c.ppmReal+c.amort+c.otrosReal;
+  const totalEgrReal=c.fijosReal+c.gerReal+c.varReal+c.ivaReal+c.ppmReal+c.otrosReal;
   document.getElementById('h-egr-p').textContent=clp(totalEgrProy);
   document.getElementById('h-egr-r').textContent=clp(totalEgrReal);
 
@@ -1077,13 +1094,18 @@ function render(){
 
   // Gerencial
   const gpl=document.getElementById('list-gp');
-  gpl.innerHTML=c.gCs.length?c.gCs.map(x=>`<div class="row"><span>${x.name}</span><span class="neg-dim" style="font-weight:600">${clp(x.amount)}</span></div>`).join(''):'<div class="empty">Sin retiro familia proyectado</div>';
+  const gpConcepts=c.gCs.map(x=>`<div class="row"><span>${x.name}</span><span class="neg-dim" style="font-weight:600">${clp(x.amount)}</span></div>`).join('');
+  const gpManual=(w.gerencialProyItems||[]).map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg-dim" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${isViewer()?'':`<button class="bx" onclick="delGP('${i.id}')">×</button>`}</div></div>`).join('');
+  gpl.innerHTML=(gpConcepts+gpManual)||'<div class="empty">Sin retiro familia proyectado</div>';
   rGerReal(w,c);
 
   // Variable
   const fm=document.getElementById('f-m2');
   if(document.activeElement!==fm)fm.value=w.m2eq||'';
-  document.getElementById('vp-amt').textContent=clp(c.varProy);
+  document.getElementById('vp-amt').textContent=clp(m2eq*(c.tasa||0));
+  const vpEl=document.getElementById('list-vp');
+  const vpItems=w.varProyItems||[];
+  vpEl.innerHTML=vpItems.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg-dim" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${isViewer()?'':`<button class="bx" onclick="delVP('${i.id}')">×</button>`}</div></div>`).join('');
   rVarReal(w);
 
   // IVA / PPM — condicional según semana de pago
@@ -1123,6 +1145,7 @@ function render(){
   renderUnpaid();
   applyProyColState();
   applyFlujoNetoState();
+  applyAmortRowState();
 }
 
 function rInc(lid,items,field,bcls,label){
@@ -1240,6 +1263,27 @@ function addGerReal(){
   tgl('agr');save();render();
 }
 function delGR(id){if(!S.weeks[CWK])return;S.weeks[CWK].gerencialRealItems=(S.weeks[CWK].gerencialRealItems||[]).filter(i=>i.id!==id);save();render();}
+function addGerProy(){
+  const d=document.getElementById('agp-d').value.trim();const a=parseFloat(document.getElementById('agp-a').value);
+  if(!d||!a)return;
+  if(!S.weeks[CWK])S.weeks[CWK]={};
+  if(!S.weeks[CWK].gerencialProyItems)S.weeks[CWK].gerencialProyItems=[];
+  S.weeks[CWK].gerencialProyItems.push({id:uid(),desc:d,amount:a});
+  document.getElementById('agp-d').value='';document.getElementById('agp-a').value='';
+  tgl('agp');save();render();
+}
+function delGP(id){if(!S.weeks[CWK])return;S.weeks[CWK].gerencialProyItems=(S.weeks[CWK].gerencialProyItems||[]).filter(i=>i.id!==id);save();render();}
+
+function addVarProy(){
+  const d=document.getElementById('avp-d').value.trim();const a=parseFloat(document.getElementById('avp-a').value);
+  if(!d||!a)return;
+  if(!S.weeks[CWK])S.weeks[CWK]={};
+  if(!S.weeks[CWK].varProyItems)S.weeks[CWK].varProyItems=[];
+  S.weeks[CWK].varProyItems.push({id:uid(),desc:d,amount:a});
+  document.getElementById('avp-d').value='';document.getElementById('avp-a').value='';
+  tgl('avp');save();render();
+}
+function delVP(id){if(!S.weeks[CWK])return;S.weeks[CWK].varProyItems=(S.weeks[CWK].varProyItems||[]).filter(i=>i.id!==id);save();render();}
 
 // ===== NO PAGADAS DEL SUELDO GERENCIAL =====
 function wkLabel(k){
@@ -1531,7 +1575,40 @@ function renderDash(){
   }
 }
 function goWeek(k){CWK=k;setTab('flujo',document.querySelector('.tbtn'));render();}
-function toggleFlujoNeto(){
+function toggleAmortRow(){
+  const row=document.getElementById('amort-row');
+  const btn=document.getElementById('amort-tog-btn');
+  const hidden=row.dataset.hidden==='1';
+  row.dataset.hidden=hidden?'':'1';
+  // show/hide everything except the outer row itself (keep the minus sign row)
+  const inner=row.querySelectorAll('.acc-vals, #det-amort, #amort-form');
+  const valEl=document.getElementById('h-amort-r');
+  if(hidden){
+    if(valEl)valEl.style.display='';
+    if(btn)btn.textContent='◀';
+  } else {
+    if(valEl)valEl.style.display='none';
+    if(btn)btn.textContent='▶';
+    const det=document.getElementById('det-amort');
+    if(det)det.style.display='none';
+  }
+  if(!S.settings)S.settings={};
+  S.settings.hideAmortRow=!hidden;
+  saveLocalOnly();
+}
+function applyAmortRowState(){
+  if(S.settings&&S.settings.hideAmortRow){
+    const valEl=document.getElementById('h-amort-r');
+    const btn=document.getElementById('amort-tog-btn');
+    const det=document.getElementById('det-amort');
+    if(valEl)valEl.style.display='none';
+    if(btn)btn.textContent='▶';
+    if(det)det.style.display='none';
+    const row=document.getElementById('amort-row');
+    if(row)row.dataset.hidden='1';
+  }
+}
+
   const vals=document.getElementById('flujo-neto-vals');
   const btn=document.getElementById('flujoneto-btn');
   const lbl=document.getElementById('flujoneto-lbl');
