@@ -505,8 +505,8 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
         <span class="acc-sign" style="color:#c0392b;font-size:16px">−</span>
         <span id="amort-lbl" style="font-size:13px;font-weight:600;color:#5f6b78;flex:1;cursor:pointer" onclick="togSec('det-amort',this)">
           <span class="chev" style="font-size:10px">▶</span> Amortización de deuda
-          <button onclick="toggleAmortRow();event.stopPropagation()" id="amort-tog-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0 2px;line-height:1;vertical-align:middle;margin-left:4px">◀</button>
         </span>
+        <button onclick="toggleAmortRow()" id="amort-tog-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0 4px;line-height:1">◀</button>
         <div class="acc-vals" id="amort-vals">
           <div class="acc-col"></div>
           <div class="acc-col real-col"><div class="cc-val neg" id="h-amort-r" style="font-size:15px">$0</div></div>
