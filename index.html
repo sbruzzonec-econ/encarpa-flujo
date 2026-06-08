@@ -1102,7 +1102,7 @@ function render(){
   // Variable
   const fm=document.getElementById('f-m2');
   if(document.activeElement!==fm)fm.value=w.m2eq||'';
-  document.getElementById('vp-amt').textContent=clp(m2eq*(c.tasa||0));
+  document.getElementById('vp-amt').textContent=clp(c.m2eq*(c.tasa||0));
   const vpEl=document.getElementById('list-vp');
   const vpItems=w.varProyItems||[];
   vpEl.innerHTML=vpItems.map(i=>`<div class="row"><span>${i.desc}</span><div style="display:flex;align-items:center;gap:6px"><span class="neg-dim" style="font-weight:600">${clp(parseFloat(i.amount))}</span>${isViewer()?'':`<button class="bx" onclick="delVP('${i.id}')">×</button>`}</div></div>`).join('');
