@@ -1611,6 +1611,9 @@ function applyAmortRowState(){
 
 function toggleFlujoNeto(){
   const vals=document.getElementById('flujo-neto-vals');
+  const btn=document.getElementById('flujoneto-btn');
+  const lbl=document.getElementById('flujoneto-lbl');
+  const hidden=vals.style.display==='none';
   vals.style.display=hidden?'':'none';
   if(lbl)lbl.style.display=hidden?'':'none';
   if(btn)btn.textContent=hidden?'◀':'▶';
