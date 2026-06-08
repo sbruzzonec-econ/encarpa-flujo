@@ -997,7 +997,7 @@ function render(){
     gerencialRealItems:[...(_wOrig.gerencialRealItems||[]),..._at.gerReal],
     otrosEgresoItems:  [...(_wOrig.otrosEgresoItems||[]),  ..._at.otrosReal],
     amortizaciones:    [...(_wOrig.amortizaciones||[]),    ..._at.amortItems],
-    m2eq:  _wOrig.m2eq||_at.m2eq,
+    m2eq:  _wOrig.m2eq,
     ivaReal: (_wOrig.ivaReal||0)+_at.ivaItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
     ppmReal: (_wOrig.ppmReal||0)+_at.ppmItems.reduce((s,i)=>s+(parseFloat(i.amount)||0),0),
   };
@@ -1520,7 +1520,7 @@ function renderDash(){
     const _at=atForWeek(wk);
     const wMerged={..._wOrig,
       incomeProy:[...(_wOrig.incomeProy||[]),..._at.ingProy],
-      m2eq:_wOrig.m2eq||_at.m2eq,
+      m2eq:_wOrig.m2eq,
     };
     const cc2=calcW(wk,wMerged,true);
     const cur=wk===todayWk;
@@ -1831,7 +1831,7 @@ document.getElementById('pin-input').addEventListener('keydown',function(e){
 
 // ==================== AIRTABLE SYNC ====================
 let AT={ingresos:[],variables:[],fijos:[],gerencial:[],iva:[],ppm:[],amort:[],otros:[],
-        cotConFecha:[],cotSinFecha:[],m2eq:{}};
+        cotConFecha:[],cotSinFecha:[]};
 let AT_LOADING=false;
 
 function setSyncStatus(msg,spin){
@@ -1854,9 +1854,8 @@ async function syncAirtable(){
       if(!r.ok){const t=await r.text();throw new Error(`${url} → ${r.status}: ${t.slice(0,200)}`);}
       return r.json();
     }
-    const [movR,opR,cotR]=await Promise.all([
+    const [movR,cotR]=await Promise.all([
       fetchJSON(`/api/movimientos?start=${fmt(from)}&end=${fmt(to)}`),
-      fetchJSON(`/api/operaciones?start=${fmt(from)}&end=${fmt(to)}`),
       fetchJSON('/api/cotizaciones'),
     ]);
     // Store raw (render will filter by week)
@@ -1868,12 +1867,6 @@ async function syncAirtable(){
     AT.ppm=movR.ppm||[];
     AT.amort=movR.amort||[];
     AT.otros=movR.otros||[];
-    // m²eq: aggregate by week key
-    AT.m2eq={};
-    (opR.records||[]).forEach(r=>{
-      const wk=monKey(new Date(r['Fecha inicio']+'T12:00:00'));
-      AT.m2eq[wk]=(AT.m2eq[wk]||0)+(parseFloat(r['Mts2 equivalentes'])||0);
-    });
     // Cotizaciones
     AT.cotConFecha=cotR.conFecha||[];
     AT.cotSinFecha=cotR.sinFecha||[];
@@ -1937,7 +1930,6 @@ function atForWeek(key){
     ppmItems:inWeek(AT.ppm),
     amortItems:inWeek(AT.amort),
     otrosReal:inWeek(AT.otros),
-    m2eq:Math.round(AT.m2eq[key]||0),
   };
 }
 
