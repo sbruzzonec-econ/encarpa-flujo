@@ -23,6 +23,7 @@ const EGRESO_MAP = {
   'IVA':                               'iva',
   'PPM':                               'ppm',
   'Amortización préstamos bancarios':  'amort',
+  'Amortización de deuda':             'amort',
   // Otros (explicit)
   'Mantención activos fijos':          'otros',
   'Comisiones de venta':               'otros',
