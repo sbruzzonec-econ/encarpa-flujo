@@ -512,7 +512,7 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
           <div class="acc-col real-col"><div class="cc-val neg" id="h-amort-r" style="font-size:15px">$0</div></div>
         </div>
       </div>
-      <div id="det-amort" style="display:none;padding:4px 16px 8px">
+      <div id="det-amort" class="cc-det" style="padding:4px 16px 8px">
         <div class="slbl" style="margin-top:8px">Agregar <button class="add-inline add-inline-real" onclick="tgl('amort-form');event.stopPropagation()">+</button></div>
         <div id="amort-form" style="display:none" class="aform">
           <div class="hint">Selecciona la deuda a amortizar y el monto.</div>
@@ -1603,7 +1603,7 @@ function applyAmortRowState(){
     const det=document.getElementById('det-amort');
     if(valEl)valEl.style.display='none';
     if(btn)btn.textContent='▶';
-    if(det)det.style.display='none';
+    if(det)det.classList.remove('open');
     const row=document.getElementById('amort-row');
     if(row)row.dataset.hidden='1';
   }
