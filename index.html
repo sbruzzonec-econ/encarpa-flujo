@@ -503,11 +503,11 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
     <div id="amort-row" style="background:#fff">
       <div style="padding:9px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f0f3f7">
         <span class="acc-sign" style="color:#c0392b;font-size:16px">−</span>
-        <span style="font-size:13px;font-weight:600;color:#5f6b78;flex:1;cursor:pointer" onclick="togSec('det-amort',this)">
+        <span id="amort-lbl" style="font-size:13px;font-weight:600;color:#5f6b78;flex:1;cursor:pointer" onclick="togSec('det-amort',this)">
           <span class="chev" style="font-size:10px">▶</span> Amortización de deuda
           <button onclick="toggleAmortRow();event.stopPropagation()" id="amort-tog-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:#c0c8d4;padding:0 2px;line-height:1;vertical-align:middle;margin-left:4px">◀</button>
         </span>
-        <div class="acc-vals">
+        <div class="acc-vals" id="amort-vals">
           <div class="acc-col"></div>
           <div class="acc-col real-col"><div class="cc-val neg" id="h-amort-r" style="font-size:15px">$0</div></div>
         </div>
@@ -1576,21 +1576,20 @@ function renderDash(){
 }
 function goWeek(k){CWK=k;setTab('flujo',document.querySelector('.tbtn'));render();}
 function toggleAmortRow(){
-  const row=document.getElementById('amort-row');
+  const lbl=document.getElementById('amort-lbl');
+  const vals=document.getElementById('amort-vals');
   const btn=document.getElementById('amort-tog-btn');
-  const hidden=row.dataset.hidden==='1';
-  row.dataset.hidden=hidden?'':'1';
-  // show/hide everything except the outer row itself (keep the minus sign row)
-  const inner=row.querySelectorAll('.acc-vals, #det-amort, #amort-form');
-  const valEl=document.getElementById('h-amort-r');
+  const det=document.getElementById('det-amort');
+  const hidden=btn&&btn.textContent==='▶';
   if(hidden){
-    if(valEl)valEl.style.display='';
+    if(lbl)lbl.style.display='';
+    if(vals)vals.style.display='';
     if(btn)btn.textContent='◀';
   } else {
-    if(valEl)valEl.style.display='none';
-    if(btn)btn.textContent='▶';
-    const det=document.getElementById('det-amort');
-    if(det)det.style.display='none';
+    if(lbl)lbl.style.display='none';
+    if(vals)vals.style.display='none';
+    if(btn){btn.style.display='';btn.textContent='▶';}
+    if(det)det.classList.remove('open');
   }
   if(!S.settings)S.settings={};
   S.settings.hideAmortRow=!hidden;
@@ -1598,14 +1597,12 @@ function toggleAmortRow(){
 }
 function applyAmortRowState(){
   if(S.settings&&S.settings.hideAmortRow){
-    const valEl=document.getElementById('h-amort-r');
+    const lbl=document.getElementById('amort-lbl');
+    const vals=document.getElementById('amort-vals');
     const btn=document.getElementById('amort-tog-btn');
-    const det=document.getElementById('det-amort');
-    if(valEl)valEl.style.display='none';
+    if(lbl)lbl.style.display='none';
+    if(vals)vals.style.display='none';
     if(btn)btn.textContent='▶';
-    if(det)det.classList.remove('open');
-    const row=document.getElementById('amort-row');
-    if(row)row.dataset.hidden='1';
   }
 }
 
