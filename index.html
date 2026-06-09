@@ -264,14 +264,14 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
         <div class="hint">Ingreso esperado de cotización aprobada (saldo pendiente con vencimiento esta semana).</div>
         <input id="aip-d" placeholder="Descripción — ej: Saldo Cot. 68, Logística Carabineros">
         <div class="ar"><input id="aip-a" type="number" placeholder="Monto">
-        <select id="aip-t"><option value="saldo">Saldo pendiente cliente</option><option value="abono">Abono cliente (50%)</option><option value="inst">Institución — OC</option></select></div>
+        <select id="aip-t"><option value="saldo">Saldo pendiente cliente</option><option value="abono">Abono cliente</option><option value="inst">Institución — OC</option><option value="otros">Otros ingresos</option></select></div>
         <div style="margin-top:8px"><button class="btn bsm btnp" onclick="addInc('proy')">Guardar</button> <button class="btn bsm" onclick="tgl('aip')">Cancelar</button></div>
       </div>
       <div class="aform" id="air" style="display:none">
         <div class="hint">Movimiento efectivo de caja recibido esta semana.</div>
         <input id="air-d" placeholder="Descripción — ej: Abono cliente Jacqui">
         <div class="ar"><input id="air-a" type="number" placeholder="Monto">
-        <select id="air-t"><option value="saldo">Saldo pendiente cliente</option><option value="abono">Abono cliente (50%)</option><option value="inst">Institución — OC</option></select></div>
+        <select id="air-t"><option value="saldo">Saldo pendiente cliente</option><option value="abono">Abono cliente</option><option value="inst">Institución — OC</option><option value="otros">Otros ingresos</option></select></div>
         <div style="margin-top:8px"><button class="btn bsm btnp" onclick="addInc('real')">Guardar</button> <button class="btn bsm" onclick="tgl('air')">Cancelar</button></div>
       </div>
       <div class="g2" style="margin:0">
