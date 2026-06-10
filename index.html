@@ -1457,9 +1457,7 @@ function copiarResumen(){
   txt+=`Flujo neto  ${flujoP}   ${flujoR}\n\n`;
   txt+=`Saldo lunes: *${saldoLunes}*\n`;
   if(amortR) txt+=`Amortización deuda: ${amortRtxt}\n`;
-  txt+=`\n*Saldo final*\n`;
-  txt+=`   Proyectado: ${saldoFP}\n`;
-  txt+=`   Real: *${saldoFR}*`;
+  txt+=`\n*Saldo final*  ${saldoFP}   *${saldoFR}*`;
   navigator.clipboard.writeText(txt).then(()=>{
     const btn=document.querySelector('[onclick="copiarResumen()"]');
     if(btn){const orig=btn.textContent;btn.textContent='✅ Copiado';setTimeout(()=>{btn.textContent=orig;},2000);}
