@@ -229,6 +229,7 @@ body.viewer-mode #cfg-tasa{pointer-events:none;opacity:.7}
       <div class="wa" id="wk-a"></div>
       <div class="wb" id="wk-b"></div>
       <div id="wk-ivabadge" style="margin-top:4px"></div>
+      <div style="margin-top:6px"><button onclick="copiarResumen()" style="background:none;border:1px solid #d0d9e3;border-radius:20px;padding:3px 10px;font-size:11px;color:#7a8a9a;cursor:pointer;font-family:inherit">📋 Copiar resumen</button></div>
     </div>
     <button class="btn bsm" onclick="navW(1)">Siguiente →</button>
   </div>
@@ -1434,6 +1435,33 @@ function delVR(id){if(!S.weeks[CWK])return;S.weeks[CWK].varRealItems=(S.weeks[CW
 
 // ==================== NAVIGATION ====================
 function navW(dir){CWK=shiftKey(CWK,dir);render();}
+
+function copiarResumen(){
+  const g=id=>{ const el=document.getElementById(id); return el?(el.value||el.textContent||'').trim():'-'; };
+  const semana=g('wk-b');
+  const ingP=g('h-ing-p'), ingR=g('h-ing-r');
+  const egrP=g('h-egr-p'), egrR=g('h-egr-r');
+  const flujoP=g('h-flujo-p'), flujoR=g('h-flujo-r');
+  const saldoLunes=g('f-open');
+  const amortVisible=document.getElementById('amort-vals')&&document.getElementById('amort-vals').style.display!=='none';
+  const amortR=amortVisible?g('h-amort-r'):null;
+  const saldoFP=g('h-close-p'), saldoFR=g('f-real');
+  let txt=`📊 *Encarpa — Flujo Semanal*\n`;
+  txt+=`📅 ${semana}\n\n`;
+  txt+=`           _Proyectado_     _Real_\n`;
+  txt+=`💰 Ingresos   ${ingP}   ${ingR}\n`;
+  txt+=`📤 Egresos    ${egrP}   ${egrR}\n`;
+  txt+=`📈 Flujo neto  ${flujoP}   ${flujoR}\n\n`;
+  txt+=`🏦 Saldo lunes: *${saldoLunes}*\n`;
+  if(amortR) txt+=`🔻 Amortización deuda: ${amortR}\n`;
+  txt+=`\n✅ *Saldo final*\n`;
+  txt+=`   Proyectado: ${saldoFP}\n`;
+  txt+=`   Real: *${saldoFR}*`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('[onclick="copiarResumen()"]');
+    if(btn){const orig=btn.textContent;btn.textContent='✅ Copiado';setTimeout(()=>{btn.textContent=orig;},2000);}
+  }).catch(()=>alert('No se pudo copiar. Intenta desde el navegador.'));
+}
 
 // ==================== TABS ====================
 function setTab(name,el){
