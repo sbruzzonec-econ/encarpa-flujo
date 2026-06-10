@@ -1969,11 +1969,11 @@ function atForWeek(key){
   // Projected income from cotizaciones with calculated date
   const ingProy=AT.cotConFecha
     .filter(c=>{const d=new Date(c.fechaPago+'T12:00:00');return d>=d0&&d<d1;})
-    .map(c=>({desc:c.desc||`Cotización ${c.id}`,amount:c.monto,source:'airtable'}));
+    .map(c=>({id:c.id,desc:c.desc||`Cotización ${c.id}`,amount:c.monto,source:'airtable'}));
   // Cotizaciones ya cobradas en su totalidad (saldo=0) — mostrar opacas
   const ingPagadas=(AT.cotPagadas||[])
     .filter(c=>{const d=new Date(c.fechaPago+'T12:00:00');return d>=d0&&d<d1;})
-    .map(c=>({desc:c.desc||`Cotización ${c.id}`,amount:c.monto,source:'pagado'}));
+    .map(c=>({id:c.id,desc:c.desc||`Cotización ${c.id}`,amount:c.monto,source:'pagado'}));
   // Manual pending assigned to this week
   const manualPend=(S.pendientes||[])
     .filter(p=>p.semana===key)
