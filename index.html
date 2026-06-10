@@ -1978,16 +1978,36 @@ function atForWeek(key){
   const manualPend=(S.pendientes||[])
     .filter(p=>p.semana===key)
     .map(p=>({desc:p.desc,amount:p.monto,source:'manual-pendiente'}));
+  // Smart routing: si un item de "otros" tiene descripción que coincide exactamente
+  // con el nombre de un concepto de Egresos fijos, redirigirlo a fijosReal.
+  const fijoConceptNames=new Set(
+    (S.concepts||[])
+      .filter(c=>['sueldo_semanal','imposiciones','gasto_fijo'].includes(c.cat))
+      .map(c=>(c.name||'').trim())
+  );
+  const otrosBase=inWeek(AT.otros);
+  const otrosRerouted=[];
+  const otrosFiltrados=[];
+  otrosBase.forEach(item=>{
+    // Extraer la descripción: último segmento después de " — "
+    const parts=(item.desc||'').split(' — ');
+    const descripcion=parts[parts.length-1].trim();
+    if(fijoConceptNames.has(descripcion)){
+      otrosRerouted.push(item);
+    } else {
+      otrosFiltrados.push(item);
+    }
+  });
   return{
     ingProy:[...ingProy,...ingPagadas,...manualPend],
     ingReal:inWeek(AT.ingresos),
     varReal:inWeek(AT.variables),
-    fijosReal:inWeek(AT.fijos),
+    fijosReal:[...inWeek(AT.fijos),...otrosRerouted],
     gerReal:inWeek(AT.gerencial),
     ivaItems:inWeek(AT.iva),
     ppmItems:inWeek(AT.ppm),
     amortItems:inWeek(AT.amort),
-    otrosReal:inWeek(AT.otros),
+    otrosReal:otrosFiltrados,
   };
 }
 
