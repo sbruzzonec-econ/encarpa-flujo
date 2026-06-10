@@ -1446,15 +1446,16 @@ function copiarResumen(){
   const amortVisible=document.getElementById('amort-vals')&&document.getElementById('amort-vals').style.display!=='none';
   const amortR=amortVisible?g('h-amort-r'):null;
   const saldoFP=g('h-close-p'), saldoFR=g('f-real');
-  let txt=`📊 *Encarpa — Flujo Semanal*\n`;
-  txt+=`📅 ${semana}\n\n`;
+  let txt=`*Encarpa — Flujo Semanal*\n`;
+  txt+=`${semana}\n\n`;
   txt+=`           _Proyectado_     _Real_\n`;
-  txt+=`💰 Ingresos   ${ingP}   ${ingR}\n`;
-  txt+=`📤 Egresos    ${egrP}   ${egrR}\n`;
-  txt+=`📈 Flujo neto  ${flujoP}   ${flujoR}\n\n`;
-  txt+=`🏦 Saldo lunes: *${saldoLunes}*\n`;
-  if(amortR) txt+=`🔻 Amortización deuda: ${amortR}\n`;
-  txt+=`\n✅ *Saldo final*\n`;
+  txt+=`Ingresos   ${ingP}   ${ingR}\n`;
+  txt+=`Egresos    ${egrP}   ${egrR}\n`;
+  txt+=`Flujo neto  ${flujoP}   ${flujoR}\n\n`;
+  txt+=`Saldo lunes: *${saldoLunes}*\n`;
+  if(amortR) txt+=`Amortización deuda: ${amortR}\n`;
+  txt+=`
+*Saldo final*\n`;
   txt+=`   Proyectado: ${saldoFP}\n`;
   txt+=`   Real: *${saldoFR}*`;
   navigator.clipboard.writeText(txt).then(()=>{
